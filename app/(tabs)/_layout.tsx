@@ -1,13 +1,13 @@
+import CalendarIcon from "@/assets/svg/calendarIcon.svg";
 import Chat from "@/assets/svg/chat.svg";
 import GroupIcon from "@/assets/svg/groupIcon.svg";
-import OpenBook from "@/assets/svg/open-book.svg";
+
 import { RootState } from "@/store";
 import { Tabs } from "expo-router";
-import CalendarIcon from "@/assets/svg/calendarIcon.svg";
 import { UserCircle } from "lucide-react-native";
 import React, { memo } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import { shallowEqual, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 type LucideIcon = React.ComponentType<{
   size?: number;
@@ -108,12 +108,8 @@ const ProfileTabIcon = memo(function ProfileTabIcon({
 });
 
 export default function TabLayout() {
-  const { communityBadge, privateBadge } = useSelector(
-    (state: RootState) => ({
-      communityBadge: state.navigation.communityBadgeCount,
-      privateBadge: state.navigation.privateBadgeCount,
-    }),
-    shallowEqual,
+  const communityBadge = useSelector(
+    (state: RootState) => state.navigation.communityBadgeCount,
   );
 
   return (
@@ -162,20 +158,10 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="private"
-        options={{
-          title: "الفردية",
-          tabBarIcon: ({ color, focused }) => (
-            <BadgeIcon
-              icon={OpenBook}
-              color={color}
-              focused={focused}
-              badgeCount={privateBadge}
-            />
-          ),
-        }}
+        options={{ href: null }}
       />
 
-      <Tabs.Screen
+<Tabs.Screen
         name="index"
         options={{
           title: "الجدول",

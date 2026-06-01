@@ -74,4 +74,44 @@ export interface ScheduleState {
   selectedDate: string;
   isLoading: boolean;
   error: string | null;
+
+  // Add Sessions form
+  addGroups: GroupItem[];
+  addSubjects: SubjectItem[];
+  addGroupsLoading: boolean;
+  sessionCount: number | null;
+  sessionCountLoading: boolean;
+  creating: boolean;
 }
+
+export type SubjectItem = {
+  id: number;
+  name: string;
+};
+
+export type GroupItem = {
+  id: number;
+  name: string;
+  time: string | null;
+  is_special: 0 | 1;
+  classes?: string[];
+  type?: string;
+  status?: string;
+  package_name?: string;
+  package_id?: number;
+  student_count?: number;
+  country_name?: string;
+  country_code?: string;
+};
+
+export type DayTimeSelection = {
+  day: string;
+  start_time: string;
+};
+
+export type CreateSessionPayload = {
+  group_id: string;
+  subject_id: string;
+  is_special: boolean;
+  days: string[] | DayTimeSelection[];
+};

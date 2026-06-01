@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { authReducer } from './auth';
+import { communityReducer } from './community';
 import { sessionsReducer } from './sessions';
 import { navigationReducer } from './navigation';
 import { teacherReducer } from './teacher';
@@ -12,6 +13,7 @@ export const store = configureStore({
     navigation: navigationReducer,
     sessions: sessionsReducer,
     alert: alertReducer,
+    community: communityReducer,
   },
 });
 

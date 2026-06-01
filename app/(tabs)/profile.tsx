@@ -1,4 +1,5 @@
 import { AccountSheet } from "@/components/Ui/account-sheet";
+import { EditProfileSheet } from "@/components/Ui/edit-profile-sheet";
 import { ScreenHeader } from "@/components/Ui/screen-header";
 import { Colors } from "@/constants/colors";
 import { useAuth } from "@/hooks/use-auth";
@@ -7,7 +8,6 @@ import { useRouter } from "expo-router";
 import {
   BookOpen,
   CalendarClock,
-  Gift,
   Lightbulb,
   LogOut,
   Settings,
@@ -15,10 +15,11 @@ import {
   User,
   UserCircle,
   UserCog,
-  Video,
+  Video
 } from "lucide-react-native";
 import { Path, Svg } from "react-native-svg";
 
+import { AppDispatch, RootState } from "@/store";
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -32,7 +33,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/store";
 
 interface ProfileMenuItem {
   id: string;
@@ -100,6 +100,7 @@ export default function ProfileScreen() {
   const { logout } = useAuth();
   const router = useRouter();
   const [accountSheetVisible, setAccountSheetVisible] = useState(false);
+  const [editSheetVisible, setEditSheetVisible] = useState(false);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -110,6 +111,10 @@ export default function ProfileScreen() {
     () => setAccountSheetVisible(false),
     [],
   );
+  const handleEdit = useCallback(() => {
+    setAccountSheetVisible(false);
+    setEditSheetVisible(true);
+  }, []);
 
   const handleLogout = useCallback(() => {
     Alert.alert("تسجيل الخروج", "هل أنت متأكد من تسجيل الخروج؟", [
@@ -129,11 +134,12 @@ export default function ProfileScreen() {
         onPress: openAccountSheet,
       },
       {
-        id: "slots",
+        id: "add-sessions",
         label: "إضافة مواعيد",
         icon: CalendarClock,
         iconColor: Colors.purple,
         iconBg: Colors.purpleBg,
+        onPress: () => router.push("/add-sessions"),
       },
       {
         id: "library",
@@ -167,13 +173,13 @@ export default function ProfileScreen() {
         iconBg: Colors.purpleBg,
         onPress: () => router.push("/guide"),
       },
-      {
-        id: "invite",
-        label: "دعوة الأشخاص",
-        icon: Gift,
-        iconColor: Colors.success,
-        iconBg: Colors.successBg,
-      },
+      // {
+      //   id: "invite",
+      //   label: "دعوة الأشخاص",
+      //   icon: Gift,
+      //   iconColor: Colors.success,
+      //   iconBg: Colors.successBg,
+      // },
       {
         id: "logout",
         label: "تسجيل الخروج",
@@ -193,8 +199,7 @@ export default function ProfileScreen() {
     </TouchableOpacity>
   );
 
-  const displayRating =
-    teacher.rating > 0 ? teacher.rating.toFixed(1) : null;
+  const displayRating = teacher.rating > 0 ? teacher.rating.toFixed(1) : null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -250,12 +255,8 @@ export default function ProfileScreen() {
             )}
           </View>
 
-          <Text style={styles.teacherName}>
-            {teacher.name || "—"}
-          </Text>
-          <Text style={styles.teacherSubject}>
-            {teacher.subject || "معلم"}
-          </Text>
+          <Text style={styles.teacherName}>{teacher.name || "—"}</Text>
+          <Text style={styles.teacherSubject}>{teacher.subject || "معلم"}</Text>
 
           <View style={styles.statsRow}>
             <StatItem label="طلاب" value={teacher.studentsCount || "—"} />
@@ -276,7 +277,7 @@ export default function ProfileScreen() {
       <AccountSheet
         visible={accountSheetVisible}
         onClose={closeAccountSheet}
-        onEdit={closeAccountSheet}
+        onEdit={handleEdit}
         data={{
           nameAr: teacher.name,
           nameEn: teacher.nameEn,
@@ -287,6 +288,20 @@ export default function ProfileScreen() {
           joinDate: teacher.joinDate,
           workType: teacher.workType,
           bio: teacher.bio,
+        }}
+      />
+
+      <EditProfileSheet
+        visible={editSheetVisible}
+        onClose={() => setEditSheetVisible(false)}
+        data={{
+          name: teacher.name,
+          nameEn: teacher.nameEn,
+          email: teacher.email,
+          country: teacher.country,
+          bio: teacher.bio,
+          workType: teacher.workType,
+          profileImage: teacher.profileImage,
         }}
       />
     </SafeAreaView>

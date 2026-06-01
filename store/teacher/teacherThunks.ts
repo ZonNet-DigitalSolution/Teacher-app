@@ -1,9 +1,11 @@
 import { API_ENDPOINTS } from '@/constants/endpoints';
 import { api, normalizeError } from '@/services/api';
+import { profileService, UpdateUserPayload } from '@/services/profileService';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
   setProfile,
   setProfileError,
+  setProfileImage,
   setProfileLoading,
   TeacherProfile,
 } from './teacherSlice';
@@ -121,6 +123,48 @@ export const updateProfile = createAsyncThunk(
       const profile = mapApiToProfile(data.data ?? data);
       dispatch(setProfile(profile));
       return profile;
+    } catch (err) {
+      dispatch(setProfileError(normalizeError(err)));
+      throw err;
+    } finally {
+      dispatch(setProfileLoading(false));
+    }
+  },
+);
+
+export const updateProfileData = createAsyncThunk(
+  'teacher/updateProfileData',
+  async (payload: UpdateUserPayload, { dispatch }) => {
+    try {
+      dispatch(setProfileLoading(true));
+      dispatch(setProfileError(null));
+      const raw = await profileService.updateUser(payload);
+      const profile = mapApiToProfile(raw);
+      dispatch(setProfile(profile));
+      return profile;
+    } catch (err) {
+      dispatch(setProfileError(normalizeError(err)));
+      throw err;
+    } finally {
+      dispatch(setProfileLoading(false));
+    }
+  },
+);
+
+export const updateProfileImage = createAsyncThunk(
+  'teacher/updateProfileImage',
+  async (
+    { imageUri, imageName }: { imageUri: string; imageName?: string },
+    { dispatch },
+  ) => {
+    try {
+      dispatch(setProfileLoading(true));
+      dispatch(setProfileError(null));
+      const raw = await profileService.updateUserImage(imageUri, imageName);
+      const imageUrl: string | null =
+        raw?.profile_pic ?? raw?.image ?? raw?.profileImage ?? null;
+      dispatch(setProfileImage(imageUrl));
+      return imageUrl;
     } catch (err) {
       dispatch(setProfileError(normalizeError(err)));
       throw err;
