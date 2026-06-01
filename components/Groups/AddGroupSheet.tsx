@@ -8,7 +8,9 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -122,7 +124,10 @@ export function AddGroupSheet({ visible, onClose, onCreated }: Props) {
       animationType="none"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <Pressable style={styles.backdrop} onPress={onClose} />
 
         <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
@@ -284,7 +289,7 @@ export function AddGroupSheet({ visible, onClose, onCreated }: Props) {
             </TouchableOpacity>
           </View>
         </Animated.View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

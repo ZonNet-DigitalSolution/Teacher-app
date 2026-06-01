@@ -1,27 +1,45 @@
+import { useFonts } from "expo-font";
 import {
   DarkTheme,
   DefaultTheme,
+  Stack,
   ThemeProvider,
-} from "@react-navigation/native";
-import { useFonts } from "expo-font";
-import { Stack, useRouter, useSegments } from "expo-router";
+  useRouter,
+  useSegments,
+} from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import "react-native-reanimated";
-import { Provider, useDispatch, useSelector } from "react-redux";
+import { Provider, useSelector } from "react-redux";
 import "../global.css";
 
 import { GlobalAlert } from "@/components/Ui/GlobalAlert";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppDispatch } from "@/hooks/store-hooks";
-import { AppDispatch, RootState, store } from "@/store";
+import { RootState, store } from "@/store";
 import { initializeAuth } from "@/store/auth";
 import { showAlert } from "@/store/alert";
 import { registerAlertGateway } from "@/services/alertGateway";
 
-SplashScreen.preventAutoHideAsync();
+function logStartup(message: string, details?: unknown) {
+  if (!__DEV__) return;
+  if (details === undefined) {
+    console.log(`[startup] ${message}`);
+  } else {
+    console.log(`[startup] ${message}`, details);
+  }
+}
+
+function warnStartup(message: string, error?: unknown) {
+  if (!__DEV__) return;
+  console.warn(`[startup] ${message}`, error);
+}
+
+SplashScreen.preventAutoHideAsync()
+  .then(() => logStartup("native splash auto-hide prevented"))
+  .catch((error) => warnStartup("preventAutoHideAsync failed", error));
 
 // ─── Route Guard ─────────────────────────────────────────────────────────────
 /**
@@ -31,16 +49,24 @@ SplashScreen.preventAutoHideAsync();
  *   • Authenticated     → (tabs)
  */
 function AuthGuard() {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const router = useRouter();
   const segments = useSegments();
+  const didInitializeAuth = useRef(false);
 
   const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
   const isInitialized = useSelector((s: RootState) => s.auth.isInitialized);
 
   // Hydrate auth from secure storage on first mount
   useEffect(() => {
-    dispatch(initializeAuth());
+    if (didInitializeAuth.current) return;
+    didInitializeAuth.current = true;
+
+    logStartup("auth initialization started");
+    dispatch(initializeAuth())
+      .unwrap()
+      .then(() => logStartup("auth initialization completed"))
+      .catch((error) => warnStartup("auth initialization failed; continuing unauthenticated", error));
   }, [dispatch]);
 
   // Redirect once we know the auth status
@@ -48,10 +74,18 @@ function AuthGuard() {
     if (!isInitialized) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    logStartup("route guard evaluated", {
+      isAuthenticated,
+      isInitialized,
+      segments,
+      inAuthGroup,
+    });
 
     if (!isAuthenticated && !inAuthGroup) {
+      logStartup("redirecting to login");
       router.replace("/(auth)/login");
     } else if (isAuthenticated && inAuthGroup) {
+      logStartup("redirecting to tabs");
       router.replace("/(tabs)");
     }
   }, [isAuthenticated, isInitialized, segments, router]);
@@ -106,7 +140,7 @@ function RootLayoutNav() {
       )}
       {/* Global alert overlay — rendered above everything, including modals */}
       <GlobalAlert />
-      <StatusBar style="auto" backgroundColor="transparent" translucent />
+      <StatusBar style="auto" />
     </ThemeProvider>
   );
 }
@@ -118,7 +152,7 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Alex_100: require("../assets/fonts/Alexandria-Thin.ttf"),
     Alex_200: require("../assets/fonts/Alexandria-ExtraLight.ttf"),
     Alex_300: require("../assets/fonts/Alexandria-Light.ttf"),
@@ -129,14 +163,27 @@ export default function RootLayout() {
     Alex_800: require("../assets/fonts/Alexandria-ExtraBold.ttf"),
     Alex_900: require("../assets/fonts/Alexandria-Black.ttf"),
   });
+  const appReady = fontsLoaded || !!fontError;
 
   useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
+    logStartup("root layout mounted");
+  }, []);
 
-  if (!fontsLoaded) return null;
+  useEffect(() => {
+    if (!appReady) return;
+
+    if (fontError) {
+      warnStartup("font loading failed; showing app with fallback fonts", fontError);
+    } else {
+      logStartup("fonts loaded");
+    }
+
+    SplashScreen.hideAsync()
+      .then(() => logStartup("native splash hidden"))
+      .catch((error) => warnStartup("hideAsync failed", error));
+  }, [appReady, fontError]);
+
+  if (!appReady) return null;
 
   return (
     <Provider store={store}>

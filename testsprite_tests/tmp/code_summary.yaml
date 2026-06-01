@@ -1,0 +1,229 @@
+project_name: teacher-app
+description: >-
+  A teacher-facing mobile application for an online tutoring/learning platform
+  (LearnAdolphin). Teachers authenticate by phone number (OTP or password),
+  manage their teaching schedule and sessions, run live meeting rooms with
+  students (chat, whiteboard, in-class games/quizzes, tools), administer
+  student groups and halls, upload session content/recordings, manage private
+  tutoring availability and bookings, view and give student reviews, and
+  maintain their profile.
+
+tech_stack:
+  language: TypeScript
+  runtime: React Native 0.85.3 (New Architecture enabled)
+  framework: Expo SDK 56 with Expo Router 56 (file-based routing, typed routes)
+  ui:
+    - NativeWind 4 / TailwindCSS 3 (utility styling)
+    - react-native-reanimated 4 (animations)
+    - react-native-gesture-handler
+    - react-native-svg / react-native-svg-transformer
+    - lucide-react-native, @expo/vector-icons, expo-symbols (icons)
+    - expo-image
+  state_management:
+    - Redux Toolkit (@reduxjs/toolkit)
+    - react-redux
+  networking:
+    - axios (REST client with Bearer-token interceptor)
+  storage:
+    - expo-secure-store (auth token / session persistence)
+  other_expo_modules:
+    - expo-document-picker (content upload)
+    - expo-web-browser (external links: hall, library)
+    - expo-haptics
+    - expo-font
+    - expo-splash-screen
+  platforms:
+    - iOS
+    - Android
+    - Web (react-native-web, static output) — used for browser-based testing
+  tooling:
+    - ESLint 9 (eslint-config-expo)
+    - TypeScript ~6.0
+
+backend_api:
+  base_url: https://admin.learnadolphin.com/api
+  auth: Bearer token (injected via axios request interceptor); 401 clears session
+  notes: >-
+    The app is purely a client; it consumes a remote REST API. All endpoints
+    are namespaced under /teachers.
+
+features:
+  - name: Authentication
+    routes:
+      - app/(auth)/login.tsx (phone-number entry / check)
+      - app/(auth)/password-login.tsx
+      - app/(auth)/otp.tsx
+      - app/(auth)/register.tsx
+      - app/(auth)/setup-password.tsx
+      - app/(auth)/forgot-password.tsx
+      - app/(auth)/verify-reset-otp.tsx
+      - app/(auth)/reset-password.tsx
+    state: store/auth (authSlice, authThunks, authService)
+    description: >-
+      Phone-based login. Flow checks whether the phone has a password set, then
+      routes to password login or OTP verification. Supports registration,
+      first-time password setup, forgot/reset password via OTP, profile fetch,
+      and logout. Auth is hydrated from secure storage on startup; an AuthGuard
+      redirects unauthenticated users to (auth)/login and authenticated users
+      into (tabs).
+    endpoints:
+      - POST /teachers/login (check phone)
+      - POST /teachers/login-password
+      - POST /teachers/verify-otp
+      - POST /teachers/setup-password
+      - POST /teachers/register
+      - POST /teachers/forgot-password
+      - POST /teachers/verify-forgot-password
+      - POST /teachers/reset-password
+      - GET  /teachers/profile
+      - POST /teachers/logout
+
+  - name: Schedule / Home
+    routes:
+      - app/(tabs)/index.tsx
+    components: components/Schedule/* (DailyView, WeeklyView, LessonCard, EditLessonSheet, etc.)
+    state: store/sessions (sessionsSlice, sessionsThunks, sessionsService)
+    description: >-
+      Teacher's lesson schedule with daily and weekly views, timeline entries,
+      and lesson editing.
+    endpoints:
+      - GET /teachers/sessions?weekFlag=1
+      - GET /teachers/sessions?date=<iso>
+
+  - name: Groups
+    routes:
+      - app/(tabs)/groups.tsx
+    components: components/Groups/* (AddGroupSheet, StudentListSheet)
+    description: >-
+      Manage subject groups: list, create, view students, delete, and review
+      students per group.
+    endpoints:
+      - GET    /teachers/subject/groups
+      - POST   /teachers/groups
+      - GET    /teachers/groups/{id}/students
+      - DELETE /teachers/groups/{id}
+      - /teachers/review/student/subject/{groupId}
+
+  - name: Meeting Lobby & Room
+    routes:
+      - app/meeting-lobby.tsx
+      - app/meeting-room.tsx
+    components:
+      - components/MeetingLobby/* (SessionInfoCard, SessionIcons, InfoRow)
+      - components/MeetingRoom/* (ChatPanel, StudentsPanel, ToolsPanel, OthersPanel, WhiteboardView, GamesPanel, EndModal, RoomIcons)
+      - components/MeetingRoom/games/* (GameGrid, GameSettings, QuestionForm)
+    description: >-
+      Pre-session lobby and live virtual classroom: student list, chat,
+      whiteboard, teaching tools, and interactive in-class games/quizzes with a
+      question builder and game settings.
+
+  - name: Session Content
+    routes:
+      - app/session-content.tsx
+      - app/add-content.tsx
+    description: >-
+      View and manage learning content attached to a session; upload content
+      (document picker) and view recordings.
+    endpoints:
+      - GET  /teachers/sessions/content/{sessionId}
+      - POST /teachers/sessions/content/upload-one
+      - PUT/DELETE teachers/sessions/content/{contentId}
+      - GET  /teachers/sessions/recordings
+
+  - name: Private Tutoring
+    routes:
+      - app/(tabs)/private.tsx
+    components:
+      - components/PrivateDashboard/* (StatCard, RequestCard, UpcomingCard, SectionHeader)
+      - components/PrivateAvailability/* (DayStrip, SlotItem, TimeGroup, Legend)
+      - components/PrivateLog/* (SessionRow, StatusBadge, RatingStars)
+      - components/PrivateSettings/* (SectionCard, StyledInput, FieldLabel)
+    description: >-
+      Private 1:1 tutoring management: dashboard with stats and booking
+      requests, availability scheduling, session log/history, and settings.
+
+  - name: Reviews
+    routes:
+      - app/reviews.tsx
+    components: components/Reviews/* (ReviewCard, StarRating, GradeFilter)
+    description: >-
+      View feedback received from students and reviews the teacher gave to
+      students, filterable by grade.
+    endpoints:
+      - GET /teachers/review/by/student
+      - GET /teachers/review/student
+
+  - name: Hall (external links)
+    routes:
+      - app/hall.tsx
+    components: components/Hall/* (HallCard, AddHallSheet)
+    description: >-
+      Manage teacher link "halls": list, create, update, delete, toggle, and
+      connect-login (opens external web browser).
+    endpoints:
+      - GET/POST /teachers/link/teacher
+      - /teachers/link/teacher/{id}
+      - /teachers/teacher/link/{id}/toggle
+      - POST /teachers/connect/login
+
+  - name: Library
+    routes:
+      - app/library.tsx
+    description: Teacher library access via login-link and info (external).
+    endpoints:
+      - /teachers/library/login-link
+      - /teachers/library/info
+
+  - name: Guides
+    routes:
+      - app/guide.tsx
+    description: Teacher help/guides listing.
+    endpoints:
+      - GET /teachers/guides
+
+  - name: Community
+    routes:
+      - app/(tabs)/community.tsx
+      - app/group-chat.tsx
+    description: Community tab and group chat.
+
+  - name: Profile
+    routes:
+      - app/(tabs)/profile.tsx
+    components: components/Ui/account-sheet.tsx
+    state: store/teacher (teacherSlice, teacherThunks)
+    description: >-
+      View and edit teacher profile, upload profile image, change password.
+    endpoints:
+      - GET/PUT /teachers/profile
+      - POST /profile/upload-image
+      - POST /profile/change-password
+
+cross_cutting:
+  - name: Global Alerts
+    state: store/alert (alertSlice, callbackRegistry)
+    description: >-
+      Centralized alert system. The axios response interceptor surfaces API
+      errors as global alerts via an alertGateway; GlobalAlert component renders
+      them app-wide.
+  - name: Navigation State
+    state: store/navigation (navigationSlice)
+  - name: Reusable UI
+    location: components/Ui/*
+    items:
+      - text-field, password-field, field-error, error-banner
+      - country-picker, screen-header, NavHeader, background-dots
+      - GlobalAlert, account-sheet
+
+entry_points:
+  app_root: app/_layout.tsx (Redux Provider, theme, fonts, splash, AuthGuard)
+  auth_group: app/(auth)/_layout.tsx
+  tabs_group: app/(tabs)/_layout.tsx
+  redux_store: store/index.ts
+
+run_commands:
+  start: expo start
+  web: expo start --web   # serves on http://localhost:8081 (used for browser tests)
+  android: expo start --android
+  ios: expo start --ios
+  lint: expo lint

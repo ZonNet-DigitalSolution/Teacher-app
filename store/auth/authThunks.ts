@@ -12,18 +12,44 @@ async function persistAuth(token: string, user: User) {
   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 }
 
+function logAuthStartup(message: string, details?: unknown) {
+  if (!__DEV__) return;
+  if (details === undefined) {
+    console.log(`[startup:auth] ${message}`);
+  } else {
+    console.log(`[startup:auth] ${message}`, details);
+  }
+}
+
+function warnAuthStartup(message: string, error?: unknown) {
+  if (!__DEV__) return;
+  console.warn(`[startup:auth] ${message}`, error);
+}
+
 // ─── Thunks ───────────────────────────────────────────────────────────────────
 
 export const initializeAuth = createAsyncThunk('auth/initialize', async (_, { dispatch }) => {
   try {
+    logAuthStartup('reading saved token and user');
     const [token, user] = await Promise.all([getToken(), getSavedUser<User>()]);
+    logAuthStartup('saved auth state read', {
+      hasToken: !!token,
+      hasUser: !!user,
+    });
+
     if (token && user) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       dispatch(setToken(token));
       dispatch(setUser(user));
+      logAuthStartup('saved session restored');
+    } else {
+      logAuthStartup('no complete saved session; login screen required');
     }
+  } catch (error) {
+    warnAuthStartup('failed to read saved auth state; login screen required', error);
   } finally {
     dispatch(setInitialized(true));
+    logAuthStartup('auth marked initialized');
   }
 });
 

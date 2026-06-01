@@ -41,3 +41,5 @@ app-example
 # generated native folders
 /ios
 /android
+
+testsprite_tests\tmp\config.json
