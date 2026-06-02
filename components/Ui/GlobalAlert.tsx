@@ -4,23 +4,28 @@ import {
   Info,
   X,
   XCircle,
-} from 'lucide-react-native';
-import React, { useCallback, useEffect, useRef } from 'react';
+} from "lucide-react-native";
+import React, { useCallback, useEffect, useRef } from "react";
 import {
   AccessibilityInfo,
   Animated,
   Modal,
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { alertCallbackRegistry, dismissAlert, selectAlertQueue } from '@/store/alert';
-import { Colors } from '@/constants/colors';
-import { useAppDispatch, useAppSelector } from '@/hooks/store-hooks';
-import type { Alert, AlertButtonStyle, AlertType } from '@/types/alert.types';
+import { Colors } from "@/constants/colors";
+import { useAppDispatch, useAppSelector } from "@/hooks/store-hooks";
+import {
+  alertCallbackRegistry,
+  dismissAlert,
+  selectAlertQueue,
+} from "@/store/alert";
+import type { Alert, AlertButtonStyle, AlertType } from "@/types/alert.types";
 
 // ─── Per-type visual config ───────────────────────────────────────────────────
 
@@ -28,14 +33,18 @@ interface TypeConfig {
   color: string;
   bgColor: string;
   borderColor: string;
-  Icon: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>;
+  Icon: React.ComponentType<{
+    size: number;
+    color: string;
+    strokeWidth?: number;
+  }>;
 }
 
 const TYPE_CONFIG: Record<AlertType, TypeConfig> = {
   success: {
     color: Colors.success,
     bgColor: Colors.successBg,
-    borderColor: Colors.success + '50',
+    borderColor: Colors.success + "40",
     Icon: CheckCircle,
   },
   error: {
@@ -47,92 +56,166 @@ const TYPE_CONFIG: Record<AlertType, TypeConfig> = {
   warning: {
     color: Colors.warning,
     bgColor: Colors.warningBg,
-    borderColor: Colors.warning + '50',
+    borderColor: Colors.warning + "50",
     Icon: AlertTriangle,
   },
   info: {
     color: Colors.info,
     bgColor: Colors.infoBg,
-    borderColor: Colors.info + '50',
+    borderColor: Colors.info + "50",
     Icon: Info,
   },
 };
 
-// ─── Button style helper ──────────────────────────────────────────────────────
+// ─── Button helpers ───────────────────────────────────────────────────────────
 
 function resolveButtonColors(
   btnStyle: AlertButtonStyle | undefined,
   typeColor: string,
 ): { bg: string; text: string; border: string } {
   switch (btnStyle) {
-    case 'danger':
-      return { bg: Colors.error, text: '#ffffff', border: Colors.error };
-    case 'secondary':
-      return { bg: 'transparent', text: Colors.textSecondary, border: Colors.border };
-    case 'primary':
+    case "danger":
+      return { bg: Colors.error, text: "#ffffff", border: Colors.error };
+    case "secondary":
+      return {
+        bg: "transparent",
+        text: Colors.textSecondary,
+        border: Colors.border,
+      };
+    case "primary":
     default:
-      return { bg: typeColor, text: '#ffffff', border: typeColor };
+      return { bg: typeColor, text: "#ffffff", border: typeColor };
   }
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+function resolveButtonStyle(
+  btnStyle: AlertButtonStyle | undefined,
+  typeColor: string,
+): object {
+  const { bg, border } = resolveButtonColors(btnStyle, typeColor);
+  return { backgroundColor: bg, borderColor: border };
+}
+
+// ─── Auto-dismiss progress bar ───────────────────────────────────────────────
+
+function ProgressBar({
+  duration,
+  color,
+  alertId,
+}: {
+  duration: number;
+  color: string;
+  alertId: string;
+}) {
+  const width = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    width.setValue(1);
+    const anim = Animated.timing(width, {
+      toValue: 0,
+      duration,
+      useNativeDriver: false,
+    });
+    anim.start();
+    return () => anim.stop();
+  }, [alertId, duration, width]);
+
+  return (
+    <View style={pbStyles.track}>
+      <Animated.View
+        style={[
+          pbStyles.fill,
+          {
+            backgroundColor: color,
+            width: width.interpolate({
+              inputRange: [0, 1],
+              outputRange: ["0%", "100%"],
+            }),
+          },
+        ]}
+      />
+    </View>
+  );
+}
+
+const pbStyles = StyleSheet.create({
+  track: {
+    height: 3,
+    backgroundColor: Colors.border,
+    borderRadius: 2,
+    marginTop: 16,
+    overflow: "hidden",
+  },
+  fill: {
+    height: "100%",
+    borderRadius: 2,
+  },
+});
+
+// ─── AlertCard ────────────────────────────────────────────────────────────────
 
 interface AlertCardProps {
   alert: Alert;
   onDismiss: () => void;
 }
 
-// ─── AlertCard (inner) ────────────────────────────────────────────────────────
-
 function AlertCard({ alert, onDismiss }: AlertCardProps) {
   const config = TYPE_CONFIG[alert.type];
   const { Icon } = config;
 
   const handleConfirm = useCallback(() => {
-    const callbacks = alertCallbackRegistry.get(alert.id);
-    callbacks?.confirm?.();
+    alertCallbackRegistry.get(alert.id)?.confirm?.();
     onDismiss();
   }, [alert.id, onDismiss]);
 
   const handleCancel = useCallback(() => {
-    const callbacks = alertCallbackRegistry.get(alert.id);
-    callbacks?.cancel?.();
+    alertCallbackRegistry.get(alert.id)?.cancel?.();
     onDismiss();
   }, [alert.id, onDismiss]);
 
   const hasButtons = !!(alert.confirmAction || alert.cancelAction);
+  // Critical = user must choose; no passive dismiss allowed
+  const isCritical = !!(alert.confirmAction && !alert.cancelAction);
 
   return (
     <View
       style={[
         styles.card,
-        { borderColor: config.borderColor },
+        { borderColor: config.borderColor, borderTopColor: config.color },
       ]}
       accessibilityRole="alert"
       accessibilityLiveRegion="assertive"
     >
       {/* ── Header ── */}
       <View style={styles.header}>
-        <View style={[styles.iconWrap, { backgroundColor: config.bgColor }]}>
-          <Icon size={22} color={config.color} strokeWidth={2} />
+        <View>
+          {alert.title ? (
+            <>
+              <View
+                style={[styles.iconWrap, { backgroundColor: config.bgColor }]}
+              >
+                <Icon size={22} color={config.color} strokeWidth={2} />
+              </View>
+              <Text style={styles.title} numberOfLines={2}>
+                {alert.title}
+              </Text>
+            </>
+          ) : null}
         </View>
 
-        {alert.title ? (
-          <Text style={styles.title} numberOfLines={2}>
-            {alert.title}
-          </Text>
-        ) : null}
-
-        {/* Close button — only shown when there are no explicit action buttons */}
-        {!hasButtons && (
+        {/* Close button hidden only for critical confirms (confirm-only, no cancel) */}
+        {!isCritical && (
           <Pressable
-            onPress={onDismiss}
-            style={styles.closeBtn}
+            onPress={hasButtons ? handleCancel : onDismiss}
+            style={({ pressed }) => [
+              styles.closeBtn,
+              pressed && styles.closeBtnPressed,
+            ]}
             hitSlop={8}
-            accessibilityLabel="Close alert"
+            accessibilityLabel="Dismiss"
             accessibilityRole="button"
           >
-            <X size={18} color={Colors.textSecondary} strokeWidth={2} />
+            <X size={16} color={Colors.textSecondary} strokeWidth={2.5} />
           </Pressable>
         )}
       </View>
@@ -157,7 +240,12 @@ function AlertCard({ alert, onDismiss }: AlertCardProps) {
               <Text
                 style={[
                   styles.btnText,
-                  { color: resolveButtonColors(alert.cancelAction.style, config.color).text },
+                  {
+                    color: resolveButtonColors(
+                      alert.cancelAction.style,
+                      config.color,
+                    ).text,
+                  },
                 ]}
               >
                 {alert.cancelAction.label}
@@ -170,7 +258,10 @@ function AlertCard({ alert, onDismiss }: AlertCardProps) {
               onPress={handleConfirm}
               style={({ pressed }) => [
                 styles.btn,
-                resolveButtonStyle(alert.confirmAction!.style ?? 'primary', config.color),
+                resolveButtonStyle(
+                  alert.confirmAction!.style ?? "primary",
+                  config.color,
+                ),
                 pressed && styles.btnPressed,
               ]}
               accessibilityRole="button"
@@ -181,7 +272,7 @@ function AlertCard({ alert, onDismiss }: AlertCardProps) {
                   styles.btnText,
                   {
                     color: resolveButtonColors(
-                      alert.confirmAction.style ?? 'primary',
+                      alert.confirmAction.style ?? "primary",
                       config.color,
                     ).text,
                   },
@@ -193,19 +284,17 @@ function AlertCard({ alert, onDismiss }: AlertCardProps) {
           )}
         </View>
       )}
+
+      {/* ── Auto-dismiss progress bar ── */}
+      {!!alert.autoDismiss && (
+        <ProgressBar
+          duration={alert.autoDismiss}
+          color={config.color}
+          alertId={alert.id}
+        />
+      )}
     </View>
   );
-}
-
-function resolveButtonStyle(
-  btnStyle: AlertButtonStyle | undefined,
-  typeColor: string,
-): object {
-  const colors = resolveButtonColors(btnStyle, typeColor);
-  return {
-    backgroundColor: colors.bg,
-    borderColor: colors.border,
-  };
 }
 
 // ─── GlobalAlert (root) ───────────────────────────────────────────────────────
@@ -215,62 +304,91 @@ export function GlobalAlert() {
   const queue = useAppSelector(selectAlertQueue);
   const current: Alert | undefined = queue[0];
 
-  // Animation values
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
-  const cardTranslateY = useRef(new Animated.Value(24)).current;
+  const cardTranslateY = useRef(new Animated.Value(30)).current;
+  const cardScale = useRef(new Animated.Value(0.92)).current;
+  const swipeTranslateY = useRef(new Animated.Value(0)).current;
 
-  // Track the last displayed alert so we re-trigger enter animation per item.
   const lastIdRef = useRef<string | null>(null);
+  const isDismissingRef = useRef(false);
+  // Stable ref so PanResponder always calls the latest handleDismiss
+  const handleDismissRef = useRef<() => void>(() => {});
 
   // ── Enter animation ────────────────────────────────────────────────────────
+  const currentId = current?.id;
+  const currentTitle = current?.title;
+  const currentMessage = current?.message;
+
   useEffect(() => {
-    if (!current || current.id === lastIdRef.current) return;
+    if (!currentId || currentId === lastIdRef.current) return;
+    lastIdRef.current = currentId;
+    isDismissingRef.current = false;
 
-    lastIdRef.current = current.id;
-
-    // Reset to starting values before animating in.
     overlayOpacity.setValue(0);
     cardOpacity.setValue(0);
-    cardTranslateY.setValue(24);
+    cardTranslateY.setValue(30);
+    cardScale.setValue(0.92);
+    swipeTranslateY.setValue(0);
 
     Animated.parallel([
       Animated.timing(overlayOpacity, {
         toValue: 1,
-        duration: 220,
+        duration: 200,
         useNativeDriver: true,
       }),
       Animated.timing(cardOpacity, {
         toValue: 1,
-        duration: 240,
+        duration: 220,
         useNativeDriver: true,
       }),
       Animated.spring(cardTranslateY, {
         toValue: 0,
         damping: 22,
-        stiffness: 280,
+        stiffness: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(cardScale, {
+        toValue: 1,
+        damping: 22,
+        stiffness: 300,
         useNativeDriver: true,
       }),
     ]).start();
 
-    // Announce to screen readers.
-    if (current.title) {
-      AccessibilityInfo.announceForAccessibility(`${current.title}. ${current.message}`);
-    } else {
-      AccessibilityInfo.announceForAccessibility(current.message);
-    }
-  }, [current?.id]);
+    AccessibilityInfo.announceForAccessibility(
+      currentTitle
+        ? `${currentTitle}. ${currentMessage}`
+        : (currentMessage ?? ""),
+    );
+  }, [
+    currentId,
+    currentTitle,
+    currentMessage,
+    cardOpacity,
+    cardScale,
+    cardTranslateY,
+    overlayOpacity,
+    swipeTranslateY,
+  ]);
 
   // ── Auto-dismiss ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!current?.autoDismiss) return;
-    const timer = setTimeout(handleDismiss, current.autoDismiss);
+    const timer = setTimeout(
+      () => handleDismissRef.current(),
+      current.autoDismiss,
+    );
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current?.id]);
 
   // ── Dismiss with exit animation ────────────────────────────────────────────
   const handleDismiss = useCallback(() => {
+    if (isDismissingRef.current) return;
+    isDismissingRef.current = true;
+    // Capture now — safe even if `current` changes during the 180ms animation
+    const alertId = current?.id;
+
     Animated.parallel([
       Animated.timing(overlayOpacity, {
         toValue: 0,
@@ -287,16 +405,55 @@ export function GlobalAlert() {
         duration: 160,
         useNativeDriver: true,
       }),
+      Animated.spring(cardScale, {
+        toValue: 0.94,
+        damping: 20,
+        stiffness: 250,
+        useNativeDriver: true,
+      }),
     ]).start(() => {
-      // Clean up callbacks before removing from queue.
-      if (current) {
-        alertCallbackRegistry.remove(current.id);
-      }
+      if (alertId) alertCallbackRegistry.remove(alertId);
       dispatch(dismissAlert());
     });
-  }, [current, dispatch, overlayOpacity, cardOpacity, cardTranslateY]);
+  }, [
+    current?.id,
+    dispatch,
+    overlayOpacity,
+    cardOpacity,
+    cardTranslateY,
+    cardScale,
+  ]);
 
-  // Don't render the Modal at all when the queue is empty.
+  // Keep ref in sync every render so PanResponder always calls the latest
+  handleDismissRef.current = handleDismiss;
+
+  // ── Swipe-up-to-dismiss gesture ────────────────────────────────────────────
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, { dy }) => dy < -8,
+      onPanResponderMove: (_, { dy }) => {
+        if (dy < 0) swipeTranslateY.setValue(dy);
+      },
+      onPanResponderRelease: (_, { dy, vy }) => {
+        if (dy < -60 || vy < -0.8) {
+          Animated.timing(swipeTranslateY, {
+            toValue: -300,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => handleDismissRef.current());
+        } else {
+          Animated.spring(swipeTranslateY, {
+            toValue: 0,
+            damping: 20,
+            stiffness: 300,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    }),
+  ).current;
+
   if (!current) return null;
 
   return (
@@ -308,11 +465,11 @@ export function GlobalAlert() {
       onRequestClose={handleDismiss}
       accessible={false}
     >
-      {/* Overlay — tapping it dismisses only when no confirm action is present */}
       <Animated.View
         style={[styles.overlay, { opacity: overlayOpacity }]}
         pointerEvents="box-none"
       >
+        {/* Overlay tap dismisses only when no confirmation is required */}
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={current.confirmAction ? undefined : handleDismiss}
@@ -320,22 +477,27 @@ export function GlobalAlert() {
           importantForAccessibility="no"
         />
 
-        {/* Card */}
         <Animated.View
           style={[
             styles.cardWrap,
             {
               opacity: cardOpacity,
-              transform: [{ translateY: cardTranslateY }],
+              transform: [
+                { translateY: cardTranslateY },
+                { translateY: swipeTranslateY },
+                { scale: cardScale },
+              ],
             },
           ]}
+          {...panResponder.panHandlers}
         >
           <AlertCard alert={current} onDismiss={handleDismiss} />
 
-          {/* Queue badge */}
           {queue.length > 1 && (
             <View style={styles.queueBadge}>
-              <Text style={styles.queueBadgeText}>{queue.length - 1} more</Text>
+              <Text style={styles.queueBadgeText}>
+                +{queue.length - 1} more
+              </Text>
             </View>
           )}
         </Animated.View>
@@ -349,114 +511,126 @@ export function GlobalAlert() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.55)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 20,
   },
 
   cardWrap: {
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   card: {
-    width: '100%',
+    width: "100%",
     backgroundColor: Colors.surface,
     borderRadius: 20,
     borderWidth: 1,
+    borderTopWidth: 3,
     paddingHorizontal: 20,
     paddingVertical: 20,
     ...Platform.select({
       ios: {
-        shadowColor: '#0f172a',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.14,
-        shadowRadius: 20,
+        shadowColor: "#0f172a",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.18,
+        shadowRadius: 24,
       },
       android: {
-        elevation: 12,
+        elevation: 14,
       },
     }),
   },
 
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
     gap: 10,
   },
 
   iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   title: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     color: Colors.textPrimary,
-    letterSpacing: -0.2,
+    letterSpacing: -0.3,
   },
 
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     borderRadius: 8,
     backgroundColor: Colors.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  closeBtnPressed: {
+    opacity: 0.6,
+    transform: [{ scale: 0.9 }],
   },
 
   message: {
     fontSize: 14,
-    lineHeight: 21,
+    lineHeight: 22,
+    textAlign: "center",
     color: Colors.textSecondary,
-    marginBottom: 4,
   },
 
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
     marginTop: 16,
   },
 
   btn: {
     flex: 1,
-    height: 44,
+    height: 46,
     borderRadius: 12,
     borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 12,
   },
 
   btnPressed: {
-    opacity: 0.82,
+    opacity: 0.78,
+    transform: [{ scale: 0.97 }],
   },
 
   btnText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: -0.1,
   },
 
   queueBadge: {
     marginTop: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    backgroundColor: "rgba(255,255,255,0.22)",
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
   },
 
   queueBadgeText: {
     fontSize: 12,
-    color: '#ffffff',
-    fontWeight: '500',
+    color: "#ffffff",
+    fontWeight: "600",
   },
 });
