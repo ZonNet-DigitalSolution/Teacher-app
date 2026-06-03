@@ -1,4 +1,4 @@
-import type { APISession, ScheduleState } from "@/types/schedule.types";
+import type { APISession, GroupItem, SubjectItem, ScheduleState } from "@/types/schedule.types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 const initialState: ScheduleState = {
@@ -7,6 +7,13 @@ const initialState: ScheduleState = {
   selectedDate: new Date().toISOString().split("T")[0],
   isLoading: false,
   error: null,
+
+  addGroups: [],
+  addSubjects: [],
+  addGroupsLoading: false,
+  sessionCount: null,
+  sessionCountLoading: false,
+  creating: false,
 };
 
 const sessionsSlice = createSlice({
@@ -41,6 +48,25 @@ const sessionsSlice = createSlice({
     clearError(state) {
       state.error = null;
     },
+
+    setAddGroups(state, action: PayloadAction<GroupItem[]>) {
+      state.addGroups = action.payload;
+    },
+    setAddSubjects(state, action: PayloadAction<SubjectItem[]>) {
+      state.addSubjects = action.payload;
+    },
+    setAddGroupsLoading(state, action: PayloadAction<boolean>) {
+      state.addGroupsLoading = action.payload;
+    },
+    setSessionCount(state, action: PayloadAction<number | null>) {
+      state.sessionCount = action.payload;
+    },
+    setSessionCountLoading(state, action: PayloadAction<boolean>) {
+      state.sessionCountLoading = action.payload;
+    },
+    setCreating(state, action: PayloadAction<boolean>) {
+      state.creating = action.payload;
+    },
   },
 });
 
@@ -52,6 +78,12 @@ export const {
   setDaySessions,
   seedDaySessions,
   clearError,
+  setAddGroups,
+  setAddSubjects,
+  setAddGroupsLoading,
+  setSessionCount,
+  setSessionCountLoading,
+  setCreating,
 } = sessionsSlice.actions;
 
 export default sessionsSlice.reducer;

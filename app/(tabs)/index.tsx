@@ -3,14 +3,17 @@ import { HomeHeader } from "@/components/Schedule/HomeHeader";
 import { SectionHeader } from "@/components/Schedule/SectionHeader";
 import { WeeklyView } from "@/components/Schedule/WeeklyView";
 import { useSessions } from "@/hooks/use-sessions";
-import { RootState } from "@/store";
-import React from "react";
+import { AppDispatch, RootState } from "@/store";
+import { fetchProfile } from "@/store/teacher";
+import React, { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useSelector } from "react-redux";
-
+import { useDispatch, useSelector } from "react-redux";
 export default function ScheduleScreen() {
-  const teacherName = useSelector((state: RootState) => state.auth.user?.name);
+  const dispatch = useDispatch<AppDispatch>();
+  const teacherName = useSelector(
+    (state: RootState) => state.teacher.name || state.auth?.user?.name,
+  );
   const {
     days,
     activeSessions,
@@ -23,6 +26,9 @@ export default function ScheduleScreen() {
     handleViewChange,
   } = useSessions();
 
+  useEffect(() => {
+    dispatch(fetchProfile());
+  }, [dispatch]);
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
