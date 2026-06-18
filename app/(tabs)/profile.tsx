@@ -15,7 +15,8 @@ import {
   User,
   UserCircle,
   UserCog,
-  Video
+  Video,
+  GraduationCap,
 } from "lucide-react-native";
 import { Path, Svg } from "react-native-svg";
 
@@ -132,6 +133,14 @@ export default function ProfileScreen() {
         iconColor: Colors.primary,
         iconBg: Colors.primaryLight,
         onPress: openAccountSheet,
+      },
+      {
+        id: "private",
+        label: "الحصص الفردية",
+        icon: GraduationCap,
+        iconColor: "#0e7490",
+        iconBg: "#cffafe",
+        onPress: () => router.push("/(tabs)/private"),
       },
       {
         id: "add-sessions",
