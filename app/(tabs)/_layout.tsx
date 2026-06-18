@@ -6,14 +6,14 @@ import { RootState } from "@/store";
 import { Tabs } from "expo-router";
 import { UserCircle } from "lucide-react-native";
 import React, { memo } from "react";
-import { ColorValue, Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { useSelector } from "react-redux";
 
 type LucideIcon = React.ComponentType<{
   size?: number;
   width?: number;
   height?: number;
-  color: string | ColorValue;
+  color: string;
   strokeWidth?: number;
 }>;
 
@@ -23,18 +23,12 @@ const TabIcon = memo(function TabIcon({
   focused,
 }: {
   icon: LucideIcon;
-  color: string | ColorValue;
+  color: string;
   focused: boolean;
 }) {
   return (
     <View style={[styles.tabIconWrap, focused && styles.tabIconWrapActive]}>
-      <Icon
-        size={22}
-        width={22}
-        height={22}
-        color={color}
-        strokeWidth={focused ? 2.5 : 1.8}
-      />
+      <Icon size={22} width={22} height={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
     </View>
   );
 });
@@ -46,26 +40,18 @@ const BadgeIcon = memo(function BadgeIcon({
   badgeCount,
 }: {
   icon: LucideIcon;
-  color: string | ColorValue;
+  color: string;
   focused: boolean;
   badgeCount: number;
 }) {
   return (
     <View style={styles.badgeContainer}>
       <View style={[styles.tabIconWrap, focused && styles.tabIconWrapActive]}>
-        <Icon
-          size={22}
-          width={22}
-          height={22}
-          color={color}
-          strokeWidth={focused ? 2.5 : 1.8}
-        />
+        <Icon size={22} width={22} height={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
       </View>
       {badgeCount > 0 && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>
-            {badgeCount > 9 ? "9+" : badgeCount}
-          </Text>
+          <Text style={styles.badgeText}>{badgeCount > 9 ? "9+" : badgeCount}</Text>
         </View>
       )}
     </View>
@@ -75,56 +61,25 @@ const BadgeIcon = memo(function BadgeIcon({
 const ProfileTabIcon = memo(function ProfileTabIcon({
   color,
   focused,
-  badgeCount,
 }: {
-  color: string | ColorValue;
+  color: string;
   focused: boolean;
-  badgeCount: number;
 }) {
-  const profileImage = useSelector(
-    (state: RootState) => state.teacher.profileImage,
-  );
+  const profileImage = useSelector((state: RootState) => state.teacher.profileImage);
 
-  const inner = profileImage ? (
-    <View
-      style={[
-        styles.profileImageWrap,
-        focused && styles.profileImageWrapFocused,
-      ]}
-    >
-      <Image
-        source={{ uri: profileImage }}
-        style={styles.profileImage}
-        resizeMode="cover"
-      />
+  return profileImage ? (
+    <View style={[styles.profileImageWrap, focused && styles.profileImageWrapFocused]}>
+      <Image source={{ uri: profileImage }} style={styles.profileImage} resizeMode="cover" />
     </View>
   ) : (
     <View style={[styles.tabIconWrap, focused && styles.tabIconWrapActive]}>
       <UserCircle size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
     </View>
   );
-
-  return (
-    <View style={styles.badgeContainer}>
-      {inner}
-      {badgeCount > 0 && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>
-            {badgeCount > 9 ? "9+" : badgeCount}
-          </Text>
-        </View>
-      )}
-    </View>
-  );
 });
 
 export default function TabLayout() {
-  const communityBadge = useSelector(
-    (state: RootState) => state.navigation.communityBadgeCount,
-  );
-  const privateBadge = useSelector(
-    (state: RootState) => state.navigation.privateBadgeCount,
-  );
+  const communityBadge = useSelector((state: RootState) => state.navigation.communityBadgeCount);
 
   return (
     <Tabs
@@ -143,7 +98,7 @@ export default function TabLayout() {
         options={{
           title: "حسابي",
           tabBarIcon: ({ color, focused }) => (
-            <ProfileTabIcon color={color} focused={focused} badgeCount={privateBadge} />
+            <ProfileTabIcon color={color} focused={focused} />
           ),
         }}
       />
@@ -152,12 +107,7 @@ export default function TabLayout() {
         options={{
           title: "المجتمع",
           tabBarIcon: ({ color, focused }) => (
-            <BadgeIcon
-              icon={Chat}
-              color={color}
-              focused={focused}
-              badgeCount={communityBadge}
-            />
+            <BadgeIcon icon={Chat} color={color} focused={focused} badgeCount={communityBadge} />
           ),
         }}
       />
@@ -170,12 +120,8 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="private" options={{ href: null }} />
       <Tabs.Screen
-        name="private"
-        options={{ href: null }}
-      />
-
-<Tabs.Screen
         name="index"
         options={{
           title: "الجدول",
@@ -192,10 +138,8 @@ const styles = StyleSheet.create({
   tabBar: {
     position: "absolute",
     bottom: 0,
-    // bottom: Platform.OS === "ios" ? 28 : 20,
     left: 20,
     right: 20,
-    // borderRadius: 32,
     backgroundColor: "#ffffff",
     height: 68,
     borderTopWidth: 1,
@@ -208,16 +152,8 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
     paddingTop: 0,
   },
-  tabItem: {
-    paddingTop: 6,
-    paddingBottom: 6,
-  },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    marginTop: 2,
-    fontFamily: "Alex_400",
-  },
+  tabItem: { paddingTop: 6, paddingBottom: 6 },
+  tabLabel: { fontSize: 10, fontWeight: "600", marginTop: 2, fontFamily: "Alex_400" },
   tabIconWrap: {
     width: 36,
     height: 36,
@@ -225,10 +161,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  tabIconWrapActive: {
-    backgroundColor: "#FCF0E0",
-    borderRadius: 18,
-  },
+  tabIconWrapActive: { backgroundColor: "#FCF0E0", borderRadius: 18 },
   profileImageWrap: {
     width: 32,
     height: 32,
@@ -237,16 +170,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "transparent",
   },
-  profileImageWrapFocused: {
-    borderColor: "#D18C2D",
-  },
-  profileImage: {
-    width: "100%",
-    height: "100%",
-  },
-  badgeContainer: {
-    position: "relative",
-  },
+  profileImageWrapFocused: { borderColor: "#D18C2D" },
+  profileImage: { width: "100%", height: "100%" },
+  badgeContainer: { position: "relative" },
   badge: {
     position: "absolute",
     top: -2,
@@ -261,9 +187,5 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "#fff",
   },
-  badgeText: {
-    color: "#fff",
-    fontSize: 9,
-    fontWeight: "800",
-  },
+  badgeText: { color: "#fff", fontSize: 9, fontWeight: "800" },
 });

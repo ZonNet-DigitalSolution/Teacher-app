@@ -18,15 +18,15 @@ export const API_ENDPOINTS = {
     SESSIONS: "/teachers/sessions",
   },
   REVIEWS: {
-    FEEDBACK: "/teachers/review/by/student",   // feedback FROM students TO teacher
-    STUDENTS: "/teachers/review/student",       // reviews teacher gave to students
+    FEEDBACK: "/teachers/review/by/student",
+    STUDENTS: "/teachers/review/student",
   },
   HALL: {
     LIST: "/teachers/link/teacher",
     CREATE: "/teachers/link/teacher",
-    UPDATE: "/teachers/link/teacher/",    // append id, send _method: PUT
-    DELETE: "/teachers/link/teacher/",    // append id
-    TOGGLE: "/teachers/teacher/link/",    // append id/toggle
+    UPDATE: "/teachers/link/teacher/",
+    DELETE: "/teachers/link/teacher/",
+    TOGGLE: "/teachers/teacher/link/",
     CONNECT_LOGIN: "/teachers/connect/login",
   },
   GUIDES: {
@@ -39,32 +39,18 @@ export const API_ENDPOINTS = {
   GROUPS: {
     LIST: "/teachers/subject/groups",
     CREATE: "/teachers/groups",
-    STUDENTS: "/teachers/groups/",      // append groupId/students
-    DELETE: "/teachers/groups/",        // append groupId
-    REVIEW: "/teachers/review/student/subject/",  // append groupId
+    STUDENTS: "/teachers/groups/",
+    DELETE: "/teachers/groups/",
+    REVIEW: "/teachers/review/student/subject/",
   },
   PACKAGES: {
     LIST: "/teachers/groups/packages",
   },
   CONTENTS: {
-    BY_SESSION: "/teachers/sessions/content/",       // append sessionId
+    BY_SESSION: "/teachers/sessions/content/",
     ADD: "/teachers/sessions/content/upload-one",
-    UPDATE: "teachers/sessions/content/",            // append contentId
-    DELETE: "teachers/sessions/content/",            // append contentId
+    UPDATE: "teachers/sessions/content/",
+    DELETE: "teachers/sessions/content/",
     RECORDINGS: "/teachers/sessions/recordings",
-  },
-  PRIVATE: {
-    // Incoming session orders from students
-    SESSION_REQUESTS:  '/teachers/one-to-one/sessions',           // GET ?status=pending
-    ACCEPT_REQUEST:    '/teachers/one-to-one/accept',             // POST /:sessionId
-    REJECT_REQUEST:    '/teachers/one-to-one/reject',             // POST /:sessionId
-    UPCOMING:          '/teachers/one-to-one/sessions',           // GET ?status=upcoming
-    HISTORY:           '/teachers/one-to-one/history',            // GET (paginated)
-    DASHBOARD:         '/teachers/one-to-one/dashboard',          // GET
-    AVAILABILITY:      '/teachers/one-to-one/availability',       // GET | PUT
-    AVAILABILITY_OVERRIDE: '/teachers/one-to-one/availability/override', // POST | DELETE /:id
-    PACKAGES:          '/teachers/one-to-one/packages',           // GET | POST | PUT /:id | DELETE /:id
-    PROFILE:           '/teachers/one-to-one/profile',            // GET | PUT
-    REGISTER_DEVICE_TOKEN: '/teachers/device-token',              // POST { token, platform }
   },
 } as const;
