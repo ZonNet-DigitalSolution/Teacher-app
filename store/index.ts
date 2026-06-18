@@ -5,6 +5,7 @@ import { sessionsReducer } from './sessions';
 import { navigationReducer } from './navigation';
 import { teacherReducer } from './teacher';
 import { alertReducer } from './alert';
+import { privateReducer } from './private';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     sessions: sessionsReducer,
     alert: alertReducer,
     community: communityReducer,
+    private: privateReducer,
   },
 });
 

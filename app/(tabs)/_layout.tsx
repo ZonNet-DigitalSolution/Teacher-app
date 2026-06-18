@@ -6,14 +6,14 @@ import { RootState } from "@/store";
 import { Tabs } from "expo-router";
 import { UserCircle } from "lucide-react-native";
 import React, { memo } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { ColorValue, Image, StyleSheet, Text, View } from "react-native";
 import { useSelector } from "react-redux";
 
 type LucideIcon = React.ComponentType<{
   size?: number;
   width?: number;
   height?: number;
-  color: string;
+  color: string | ColorValue;
   strokeWidth?: number;
 }>;
 
@@ -23,7 +23,7 @@ const TabIcon = memo(function TabIcon({
   focused,
 }: {
   icon: LucideIcon;
-  color: string;
+  color: string | ColorValue;
   focused: boolean;
 }) {
   return (
@@ -46,7 +46,7 @@ const BadgeIcon = memo(function BadgeIcon({
   badgeCount,
 }: {
   icon: LucideIcon;
-  color: string;
+  color: string | ColorValue;
   focused: boolean;
   badgeCount: number;
 }) {
@@ -75,34 +75,45 @@ const BadgeIcon = memo(function BadgeIcon({
 const ProfileTabIcon = memo(function ProfileTabIcon({
   color,
   focused,
+  badgeCount,
 }: {
-  color: string;
+  color: string | ColorValue;
   focused: boolean;
+  badgeCount: number;
 }) {
   const profileImage = useSelector(
     (state: RootState) => state.teacher.profileImage,
   );
 
-  if (profileImage) {
-    return (
-      <View
-        style={[
-          styles.profileImageWrap,
-          focused && styles.profileImageWrapFocused,
-        ]}
-      >
-        <Image
-          source={{ uri: profileImage }}
-          style={styles.profileImage}
-          resizeMode="cover"
-        />
-      </View>
-    );
-  }
-
-  return (
+  const inner = profileImage ? (
+    <View
+      style={[
+        styles.profileImageWrap,
+        focused && styles.profileImageWrapFocused,
+      ]}
+    >
+      <Image
+        source={{ uri: profileImage }}
+        style={styles.profileImage}
+        resizeMode="cover"
+      />
+    </View>
+  ) : (
     <View style={[styles.tabIconWrap, focused && styles.tabIconWrapActive]}>
       <UserCircle size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
+    </View>
+  );
+
+  return (
+    <View style={styles.badgeContainer}>
+      {inner}
+      {badgeCount > 0 && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>
+            {badgeCount > 9 ? "9+" : badgeCount}
+          </Text>
+        </View>
+      )}
     </View>
   );
 });
@@ -110,6 +121,9 @@ const ProfileTabIcon = memo(function ProfileTabIcon({
 export default function TabLayout() {
   const communityBadge = useSelector(
     (state: RootState) => state.navigation.communityBadgeCount,
+  );
+  const privateBadge = useSelector(
+    (state: RootState) => state.navigation.privateBadgeCount,
   );
 
   return (
@@ -129,7 +143,7 @@ export default function TabLayout() {
         options={{
           title: "حسابي",
           tabBarIcon: ({ color, focused }) => (
-            <ProfileTabIcon color={color} focused={focused} />
+            <ProfileTabIcon color={color} focused={focused} badgeCount={privateBadge} />
           ),
         }}
       />

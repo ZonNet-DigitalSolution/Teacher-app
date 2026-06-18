@@ -1,15 +1,20 @@
+import { RejectReasonSheet } from "@/components/PrivateDashboard/RejectReasonSheet";
 import { RequestCard } from "@/components/PrivateDashboard/RequestCard";
 import { SectionHeader } from "@/components/PrivateDashboard/SectionHeader";
-import {
-  PendingRequest,
-  StatItem,
-  UpcomingSession,
-} from "@/components/PrivateDashboard/Types";
 import { UpcomingCard } from "@/components/PrivateDashboard/UpcomingCard";
 import { Colors } from "@/constants/colors";
-import { BookOpen, Clock, DollarSign, Users } from "lucide-react-native";
-import React, { useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/hooks/store-hooks";
 import {
+  acceptSessionRequest,
+  fetchSessionRequests,
+  fetchUpcomingSessions,
+  rejectSessionRequest,
+} from "@/store/private";
+import { useRouter } from "expo-router";
+import { BookOpen } from "lucide-react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,131 +22,124 @@ import {
   useWindowDimensions,
 } from "react-native";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const STATS: StatItem[] = [
-  {
-    label: "الأرباح",
-    value: "١,٢٥٠",
-    unit: "ريال",
-    color: Colors.success,
-    icon: DollarSign,
-  },
-  { label: "الطلاب", value: "١٢", unit: "", color: Colors.info, icon: Users },
-  {
-    label: "قادمة",
-    value: "٣",
-    unit: "",
-    color: Colors.purple,
-    icon: BookOpen,
-  },
-  { label: "طلبات", value: "٢", unit: "", color: Colors.warning, icon: Clock },
-];
-
-const INITIAL_REQUESTS: PendingRequest[] = [
-  {
-    id: "1",
-    student: "ريم العتيبي",
-    subject: "الجبر",
-    date: "السبت، ٨ مارس",
-    time: "10:00",
-    price: "٢٥٠ ",
-  },
-  {
-    id: "2",
-    student: "خالد السبيعي",
-    subject: "حساب التفاضل",
-    date: "الأحد، ٩ مارس",
-    time: "14:00",
-    price: "٢٥٠ ",
-  },
-];
-
-const UPCOMING: UpcomingSession[] = [
-  {
-    id: "1",
-    student: "سارة أحمد",
-    subject: "الجبر المتقدم",
-    date: "اليوم",
-    time: "10:00 - 10:45",
-    isToday: true,
-  },
-  {
-    id: "2",
-    student: "نورة سعد",
-    subject: "الإحصاء التطبيقي",
-    date: "غداً",
-    time: "11:00 - 11:45",
-    isToday: false,
-  },
-  {
-    id: "3",
-    student: "عمر خالد",
-    subject: "حساب التفاضل",
-    date: "الاثنين",
-    time: "14:30 - 15:15",
-    isToday: false,
-  },
-];
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function PrivateDashboard() {
-  const { width: screenW } = useWindowDimensions();
-  const cardWidth = Math.floor((screenW - 32 - 12) / 2);
-  const [requests, setRequests] = useState(INITIAL_REQUESTS);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const requests = useAppSelector((s) => s.private.requests);
+  const requestsLoading = useAppSelector((s) => s.private.requestsLoading);
+  const upcoming = useAppSelector((s) => s.private.upcoming);
+  const upcomingLoading = useAppSelector((s) => s.private.upcomingLoading);
+  const [rejectTargetId, setRejectTargetId] = useState<number | null>(null);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
 
-  function handleAccept(id: string) {
-    setRequests((prev) => prev.filter((r) => r.id !== id));
-  }
+  useEffect(() => {
+    dispatch(fetchSessionRequests());
+    dispatch(fetchUpcomingSessions());
+  }, [dispatch]);
 
-  function handleReject(id: string) {
-    setRequests((prev) => prev.filter((r) => r.id !== id));
-  }
+  const handleAccept = useCallback(
+    async (id: string) => {
+      const sessionId = Number(id);
+      setActionLoading(sessionId);
+      try {
+        await dispatch(acceptSessionRequest({ sessionId })).unwrap();
+      } finally {
+        setActionLoading(null);
+      }
+    },
+    [dispatch],
+  );
+
+  const handleRejectConfirm = useCallback(
+    async (reason: string) => {
+      if (rejectTargetId === null) return;
+      const sessionId = rejectTargetId;
+      setRejectTargetId(null);
+      setActionLoading(sessionId);
+      try {
+        await dispatch(rejectSessionRequest({ sessionId, reason })).unwrap();
+      } finally {
+        setActionLoading(null);
+      }
+    },
+    [dispatch, rejectTargetId],
+  );
+
+  const isRefreshing = requestsLoading || upcomingLoading;
+
+  const onRefresh = useCallback(() => {
+    dispatch(fetchSessionRequests());
+    dispatch(fetchUpcomingSessions());
+  }, [dispatch]);
 
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Stats 2-column grid */}
-      {/* <View style={styles.statsGrid}>
-        {STATS.map((s) => (
-          <StatCard key={s.label} item={s} width={cardWidth} />
-        ))}
-      </View> */}
-
-      {/* Pending Requests */}
-      {requests.length > 0 && (
-        <View style={styles.section}>
-          <SectionHeader title="طلبات معلقة" badge={requests.length} />
-          {requests.map((r) => (
-            <RequestCard
-              key={r.id}
-              item={r}
-              onAccept={handleAccept}
-              onReject={handleReject}
-            />
-          ))}
-        </View>
-      )}
-
-      {/* Upcoming Sessions */}
-      <View style={styles.section}>
-        <SectionHeader title="الجلسات القادمة" />
-        {UPCOMING.length > 0 ? (
-          UPCOMING.map((s) => <UpcomingCard key={s.id} item={s} />)
-        ) : (
-          <View style={styles.emptyState}>
-            <BookOpen size={40} color={Colors.textTertiary} />
-            <Text style={styles.emptyText}>لا توجد جلسات قادمة</Text>
+    <>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
+      >
+        {/* Pending Requests */}
+        {requests.length > 0 && (
+          <View style={styles.section}>
+            <SectionHeader title="طلبات معلقة" badge={requests.length} />
+            {requests.map((r) => (
+              <RequestCard
+                key={r.id}
+                item={r}
+                onAccept={handleAccept}
+                onReject={(id) => setRejectTargetId(Number(id))}
+                loading={actionLoading === r.id}
+              />
+            ))}
           </View>
         )}
-      </View>
 
-      <View style={styles.footer} />
-    </ScrollView>
+        {/* Upcoming Sessions */}
+        <View style={styles.section}>
+          <SectionHeader title="الجلسات القادمة" />
+          {upcoming.length > 0 ? (
+            upcoming.map((s) => (
+              <UpcomingCard
+                key={s.id}
+                item={{
+                  id: String(s.id),
+                  student: s.student.name,
+                  subject: s.subject,
+                  date: s.date,
+                  time: s.time,
+                  isToday: s.date === new Date().toISOString().split("T")[0],
+                }}
+              />
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <BookOpen size={40} color={Colors.textTertiary} />
+              <Text style={styles.emptyText}>لا توجد جلسات قادمة</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.footer} />
+      </ScrollView>
+
+      {rejectTargetId !== null && (
+        <RejectReasonSheet
+          onConfirm={handleRejectConfirm}
+          onClose={() => setRejectTargetId(null)}
+        />
+      )}
+    </>
   );
 }
 

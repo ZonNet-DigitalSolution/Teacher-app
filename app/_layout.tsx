@@ -14,6 +14,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import "react-native-reanimated";
 import { Provider, useSelector } from "react-redux";
 import "../global.css";
+import * as Notifications from "expo-notifications";
 
 import { GlobalAlert } from "@/components/Ui/GlobalAlert";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -22,6 +23,7 @@ import { RootState, store } from "@/store";
 import { initializeAuth } from "@/store/auth";
 import { showAlert } from "@/store/alert";
 import { registerAlertGateway } from "@/services/alertGateway";
+import { incrementPrivateBadge } from "@/store/navigation/navigationSlice";
 
 function logStartup(message: string, details?: unknown) {
   if (!__DEV__) return;
@@ -102,6 +104,57 @@ function AppLoadingScreen() {
   );
 }
 
+// ─── Notification Handler ─────────────────────────────────────────────────────
+/**
+ * Listens for incoming push notifications and notification taps.
+ * - Foreground: increments the private tab badge for session-order notifications.
+ * - Tap: navigates to the correct screen based on notification data.screen.
+ */
+function NotificationHandler() {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
+
+  useEffect(() => {
+    // Fired when a notification arrives while the app is open
+    notificationListener.current = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        const { type } = (notification.request.content.data ?? {}) as Record<string, string>;
+        if (type === "new_session_order") {
+          dispatch(incrementPrivateBadge());
+        }
+      },
+    );
+
+    // Fired when the user taps a notification (foreground, background, or cold start via tray)
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const data = (response.notification.request.content.data ?? {}) as Record<string, string>;
+        if (data.screen === "session-requests") {
+          router.push("/session-requests");
+        }
+      },
+    );
+
+    // Handle the notification that launched the app from a completely killed state
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (!response) return;
+      const data = (response.notification.request.content.data ?? {}) as Record<string, string>;
+      if (data.screen === "session-requests") {
+        router.push("/session-requests");
+      }
+    });
+
+    return () => {
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
+    };
+  }, [dispatch, router]);
+
+  return null;
+}
+
 // ─── Alert Gateway Registration ───────────────────────────────────────────────
 /**
  * Wires the alert gateway once so axios interceptors and service-layer code
@@ -125,6 +178,7 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <AlertGatewayRegistrar />
+      <NotificationHandler />
       <AuthGuard />
       {!isInitialized ? (
         <AppLoadingScreen />
@@ -136,6 +190,15 @@ function RootLayoutNav() {
           <Stack.Screen name="group-chat" />
           <Stack.Screen name="add-content" />
           <Stack.Screen name="session-content" />
+          <Stack.Screen name="session-requests" />
+          <Stack.Screen name="add-sessions" />
+          <Stack.Screen name="hall" />
+          <Stack.Screen name="reviews" />
+          <Stack.Screen name="guide" />
+          <Stack.Screen name="library" />
+          <Stack.Screen name="notifications" />
+          <Stack.Screen name="meeting-lobby" />
+          <Stack.Screen name="meeting-room" />
         </Stack>
       )}
       {/* Global alert overlay — rendered above everything, including modals */}

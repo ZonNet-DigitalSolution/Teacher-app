@@ -44,7 +44,14 @@
       "expo-font",
       "expo-image",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "color": "#D18C2D",
+          "defaultChannel": "session-orders"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

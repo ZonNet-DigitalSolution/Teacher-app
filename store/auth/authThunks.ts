@@ -4,12 +4,25 @@ import { clearSession, getSavedUser, getToken, saveToken, saveUser } from '@/uti
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { authService } from './authService';
 import { clearAuth, setError, setInitialized, setLoading, setToken, setUser } from './authSlice';
+import {
+  registerForPushNotifications,
+  syncPushTokenWithBackend,
+} from '@/services/pushNotificationService';
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
 async function persistAuth(token: string, user: User) {
   await Promise.all([saveToken(token), saveUser(user)]);
   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+
+async function registerPushAfterLogin() {
+  try {
+    const pushToken = await registerForPushNotifications();
+    if (pushToken) await syncPushTokenWithBackend(pushToken);
+  } catch {
+    // Non-critical — never block the login flow
+  }
 }
 
 function logAuthStartup(message: string, details?: unknown) {
@@ -42,6 +55,10 @@ export const initializeAuth = createAsyncThunk('auth/initialize', async (_, { di
       dispatch(setToken(token));
       dispatch(setUser(user));
       logAuthStartup('saved session restored');
+      // Re-register push token in case it changed since last session
+      registerForPushNotifications()
+        .then(pushToken => { if (pushToken) syncPushTokenWithBackend(pushToken); })
+        .catch(() => { /* non-critical */ });
     } else {
       logAuthStartup('no complete saved session; login screen required');
     }
@@ -81,6 +98,7 @@ export const loginWithPassword = createAsyncThunk(
       await persistAuth(result.token, result.user);
       dispatch(setToken(result.token));
       dispatch(setUser(result.user));
+      registerPushAfterLogin();
       return result;
     } catch (err) {
       const msg = normalizeError(err);
@@ -102,6 +120,7 @@ export const verifyOtp = createAsyncThunk(
       await persistAuth(result.token, result.user);
       dispatch(setToken(result.token));
       dispatch(setUser(result.user));
+      registerPushAfterLogin();
       return result;
     } catch (err) {
       const msg = normalizeError(err);
@@ -123,6 +142,7 @@ export const setupPassword = createAsyncThunk(
       await persistAuth(result.token, result.user);
       dispatch(setToken(result.token));
       dispatch(setUser(result.user));
+      registerPushAfterLogin();
       return result;
     } catch (err) {
       const msg = normalizeError(err);

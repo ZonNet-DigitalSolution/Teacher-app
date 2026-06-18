@@ -27,6 +27,9 @@ const navigationSlice = createSlice({
     setPrivateBadge(state, action: PayloadAction<number>) {
       state.privateBadgeCount = action.payload;
     },
+    incrementPrivateBadge(state) {
+      state.privateBadgeCount += 1;
+    },
     clearPrivateBadge(state) {
       state.privateBadgeCount = 0;
     },
@@ -37,6 +40,7 @@ export const {
   setCommunityBadge,
   clearCommunityBadge,
   setPrivateBadge,
+  incrementPrivateBadge,
   clearPrivateBadge,
 } = navigationSlice.actions;
 
