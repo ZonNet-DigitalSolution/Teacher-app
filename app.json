@@ -49,7 +49,7 @@
         "expo-notifications",
         {
           "color": "#D18C2D",
-          "defaultChannel": "session-orders"
+          "defaultChannel": "private_sessions"
         }
       ]
     ],

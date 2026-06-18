@@ -17,6 +17,18 @@ export const API_ENDPOINTS = {
   SCHEDULE: {
     SESSIONS: "/teachers/sessions",
   },
+  PRIVATE: {
+    BOOKINGS: "/teachers/private-session-bookings",
+    PENDING: "/teachers/private-session-bookings?status=pending_teacher&per_page=200",
+    ACCEPTED: "/teachers/private-session-bookings?status=accepted&per_page=200",
+    CANCELLED: "/teachers/private-session-bookings?status=cancelled&per_page=200",
+    ACCEPT: (id: string | number) => `/teachers/private-session-bookings/${id}/accept`,
+    REJECT: (id: string | number) => `/teachers/private-session-bookings/${id}/reject`,
+  },
+  NOTIFICATIONS: {
+    REGISTER_DEVICE: "/teachers/device/register",
+    TEST_PUSH: "/teachers/notifications/test-push",
+  },
   REVIEWS: {
     FEEDBACK: "/teachers/review/by/student",
     STUDENTS: "/teachers/review/student",

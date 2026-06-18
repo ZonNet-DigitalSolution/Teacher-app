@@ -6,20 +6,26 @@ interface ScreenHeaderProps {
   title: string;
   icon: React.ComponentType<{ size: number; color: string }>;
   leftAction?: React.ReactNode;
+  rightAction?: React.ReactNode;
 }
 
 export function ScreenHeader({
   title,
   icon: Icon,
   leftAction,
+  rightAction,
 }: ScreenHeaderProps) {
+  const iconBox = (
+    <View style={styles.iconBox}>
+      <Icon size={22} color={Colors.primary} />
+    </View>
+  );
+
   return (
     <View style={styles.header}>
-      <View style={styles.iconBox}>
-        <Icon size={22} color={Colors.primary} />
-      </View>
+      {rightAction ?? iconBox}
       <Text style={styles.title}>{title}</Text>
-      {leftAction ?? <View style={styles.placeholder} />}
+      {leftAction ?? (rightAction ? iconBox : <View style={styles.placeholder} />)}
     </View>
   );
 }

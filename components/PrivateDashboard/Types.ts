@@ -1,4 +1,5 @@
 import React from "react";
+import type { PrivateSessionBooking } from "@/store/private";
 
 export type StatItem = {
   label: string;
@@ -8,14 +9,9 @@ export type StatItem = {
   icon: React.ComponentType<{ size: number; color: string }>;
 };
 
-export type PendingRequest = {
-  id: string;
-  student: string;
-  subject: string;
-  date: string;
-  time: string;
-  price: string;
-};
+export type { PrivateSessionBooking };
+
+export type PendingRequest = PrivateSessionBooking;
 
 export type UpcomingSession = {
   id: string;

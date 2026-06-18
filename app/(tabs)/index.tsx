@@ -7,7 +7,7 @@ import { useSessions } from "@/hooks/use-sessions";
 import { AppDispatch, RootState } from "@/store";
 import { fetchProfile } from "@/store/teacher";
 import { useRouter } from "expo-router";
-import { GraduationCap } from "lucide-react-native";
+import { ChevronLeft, GraduationCap } from "lucide-react-native";
 import React, { useEffect } from "react";
 import {
   ScrollView,
@@ -50,7 +50,7 @@ export default function ScheduleScreen() {
         <TouchableOpacity
           style={styles.privateBanner}
           activeOpacity={0.8}
-          onPress={() => router.push("/(tabs)/private")}
+          onPress={() => router.push("/(tabs)/private?tab=new")}
         >
           <View style={styles.privateBannerIcon}>
             <GraduationCap size={22} color={Colors.primary} />
@@ -59,7 +59,9 @@ export default function ScheduleScreen() {
             <Text style={styles.privateBannerTitle}>طلبات الحصص الفردية</Text>
             <Text style={styles.privateBannerSub}>اعرض وأدِر طلبات الطلاب</Text>
           </View>
-          <Text style={styles.privateBannerArrow}>‹</Text>
+          <View style={styles.privateBannerArrow}>
+            <ChevronLeft size={20} color={Colors.primary} strokeWidth={2.4} />
+          </View>
         </TouchableOpacity>
 
         <SectionHeader scheduleView={view} onToggleView={handleViewChange} />
@@ -109,6 +111,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   privateBannerText: { flex: 1, alignItems: "flex-end" },
+  privateBannerArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   privateBannerTitle: {
     fontSize: 14,
     fontFamily: "Alex_600",
@@ -119,10 +129,5 @@ const styles = StyleSheet.create({
     fontFamily: "Alex_400",
     color: Colors.textSecondary,
     marginTop: 2,
-  },
-  privateBannerArrow: {
-    fontSize: 20,
-    color: Colors.primary,
-    transform: [{ rotate: "180deg" }],
   },
 });

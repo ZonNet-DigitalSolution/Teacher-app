@@ -1,51 +1,76 @@
 import { RequestCard } from "@/components/PrivateDashboard/RequestCard";
-import { SectionHeader } from "@/components/PrivateDashboard/SectionHeader";
-import { UpcomingCard } from "@/components/PrivateDashboard/UpcomingCard";
+import type { PrivateSessionBooking } from "@/components/PrivateDashboard/Types";
 import { Colors } from "@/constants/colors";
-import { BookOpen } from "lucide-react-native";
+import { Inbox } from "lucide-react-native";
 import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-const MOCK_REQUESTS = [
-  { id: "1", student: "أحمد محمد", subject: "رياضيات", date: "2025-06-20", time: "10:00", price: "150" },
-  { id: "2", student: "سارة علي", subject: "فيزياء", date: "2025-06-21", time: "14:00", price: "200" },
-];
+type PrivateDashboardProps = {
+  requests: PrivateSessionBooking[];
+  isLoading: boolean;
+  isRefreshing: boolean;
+  actionLoadingId: string | null;
+  onAccept: (id: string) => void | Promise<void>;
+  onReject: (id: string) => void | Promise<void>;
+  onRefresh: () => void;
+};
 
-const MOCK_UPCOMING = [
-  { id: "1", student: "محمد أحمد", subject: "كيمياء", date: "2025-06-19", time: "09:00", isToday: true },
-];
+export function PrivateDashboard({
+  requests,
+  isLoading,
+  isRefreshing,
+  actionLoadingId,
+  onAccept,
+  onReject,
+  onRefresh,
+}: PrivateDashboardProps) {
+  if (isLoading && requests.length === 0) {
+    return (
+      <View style={styles.loadingState}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
-export function PrivateDashboard() {
   return (
     <ScrollView
       style={styles.scroll}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={onRefresh}
+          tintColor={Colors.primary}
+          colors={[Colors.primary]}
+        />
+      }
     >
-      {MOCK_REQUESTS.length > 0 && (
-        <View style={styles.section}>
-          <SectionHeader title="طلبات معلقة" badge={MOCK_REQUESTS.length} />
-          {MOCK_REQUESTS.map((r) => (
-            <RequestCard
-              key={r.id}
-              item={r}
-              onAccept={(id) => console.log("accept", id)}
-              onReject={(id) => console.log("reject", id)}
-            />
-          ))}
-        </View>
-      )}
-
       <View style={styles.section}>
-        <SectionHeader title="الجلسات القادمة" />
-        {MOCK_UPCOMING.length > 0 ? (
-          MOCK_UPCOMING.map((s) => (
-            <UpcomingCard key={s.id} item={s} />
+        {requests.length > 0 ? (
+          requests.map((request) => (
+            <RequestCard
+              key={request.id}
+              item={request}
+              isBusy={actionLoadingId === request.id}
+              onAccept={onAccept}
+              onReject={onReject}
+            />
           ))
         ) : (
           <View style={styles.emptyState}>
-            <BookOpen size={40} color={Colors.textTertiary} />
-            <Text style={styles.emptyText}>لا توجد جلسات قادمة</Text>
+            <Inbox size={44} color={Colors.borderLight} strokeWidth={1.8} />
+            <Text style={styles.emptyText}>لا توجد طلبات حصص فردية حالياً</Text>
+            <Text style={styles.emptyHint}>
+              ستظهر هنا طلبات الحصص الفردية الجديدة عند وصولها
+            </Text>
           </View>
         )}
       </View>
@@ -58,8 +83,32 @@ export function PrivateDashboard() {
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { paddingTop: 16 },
-  section: { paddingHorizontal: 16, marginTop: 24, gap: 20 },
-  emptyState: { alignItems: "center", paddingVertical: 40, gap: 12 },
-  emptyText: { fontSize: 14, fontFamily: "Alex_400", color: Colors.textTertiary },
+  section: { paddingHorizontal: 16, marginTop: 20 },
+  loadingState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 52,
+    paddingBottom: 40,
+    gap: 10,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontFamily: "Alex_700",
+    color: Colors.textMuted,
+    textAlign: "center",
+    writingDirection: "rtl",
+  },
+  emptyHint: {
+    fontSize: 13,
+    fontFamily: "Alex_400",
+    color: Colors.textSecondary,
+    textAlign: "center",
+    writingDirection: "rtl",
+  },
   footer: { height: 100 },
 });

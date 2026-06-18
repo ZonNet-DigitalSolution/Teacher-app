@@ -22,6 +22,11 @@ import { RootState, store } from "@/store";
 import { initializeAuth } from "@/store/auth";
 import { showAlert } from "@/store/alert";
 import { registerAlertGateway } from "@/services/alertGateway";
+import {
+  configureForegroundNotifications,
+  registerForPushNotifications,
+  registerNotificationResponseHandler,
+} from "@/services/pushNotificationsService";
 
 function logStartup(message: string, details?: unknown) {
   if (!__DEV__) return;
@@ -100,6 +105,59 @@ function AlertGatewayRegistrar() {
   return null;
 }
 
+function PushNotificationRegistrar() {
+  const router = useRouter();
+  const didRegisterPushToken = useRef(false);
+  const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
+  const isInitialized = useSelector((s: RootState) => s.auth.isInitialized);
+
+  useEffect(() => {
+    let isMounted = true;
+    let cleanup: (() => void) | null = null;
+
+    configureForegroundNotifications().catch((error) =>
+      warnStartup("foreground notification setup failed", error),
+    );
+
+    registerNotificationResponseHandler(router)
+      .then((removeListener) => {
+        if (isMounted) {
+          cleanup = removeListener;
+        } else {
+          removeListener();
+        }
+      })
+      .catch((error) => warnStartup("notification response listener setup failed", error));
+
+    return () => {
+      isMounted = false;
+      cleanup?.();
+    };
+  }, [router]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    if (!isAuthenticated) {
+      didRegisterPushToken.current = false;
+      return;
+    }
+
+    if (didRegisterPushToken.current) return;
+    didRegisterPushToken.current = true;
+
+    registerForPushNotifications()
+      .then((token) => {
+        if (token) {
+          logStartup("push token registered");
+        }
+      })
+      .catch((error) => warnStartup("push token registration failed", error));
+  }, [isAuthenticated, isInitialized]);
+
+  return null;
+}
+
 // ─── Inner Layout ─────────────────────────────────────────────────────────────
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
@@ -109,6 +167,7 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <AlertGatewayRegistrar />
       <AuthGuard />
+      <PushNotificationRegistrar />
       {!isInitialized ? (
         <AppLoadingScreen />
       ) : (

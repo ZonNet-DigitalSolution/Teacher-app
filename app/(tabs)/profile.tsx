@@ -3,9 +3,11 @@ import { EditProfileSheet } from "@/components/Ui/edit-profile-sheet";
 import { ScreenHeader } from "@/components/Ui/screen-header";
 import { Colors } from "@/constants/colors";
 import { useAuth } from "@/hooks/use-auth";
+import { sendTestPushNotification } from "@/services/pushNotificationsService";
 import { fetchProfile } from "@/store/teacher";
 import { useRouter } from "expo-router";
 import {
+  BellRing,
   BookOpen,
   CalendarClock,
   Lightbulb,
@@ -101,6 +103,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [accountSheetVisible, setAccountSheetVisible] = useState(false);
   const [editSheetVisible, setEditSheetVisible] = useState(false);
+  const [isSendingTestPush, setIsSendingTestPush] = useState(false);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -122,6 +125,20 @@ export default function ProfileScreen() {
       { text: "تسجيل الخروج", style: "destructive", onPress: logout },
     ]);
   }, [logout]);
+
+  const handleSendTestPush = useCallback(async () => {
+    if (isSendingTestPush) return;
+
+    try {
+      setIsSendingTestPush(true);
+      await sendTestPushNotification();
+      Alert.alert("تم الإرسال", "تم إرسال إشعار الاختبار إلى موبايل المدرس الحالي.");
+    } catch {
+      Alert.alert("تعذر الإرسال", "تأكد من تسجيل الجهاز ومن صلاحية الإشعارات.");
+    } finally {
+      setIsSendingTestPush(false);
+    }
+  }, [isSendingTestPush]);
 
   const menuItems = useMemo<ProfileMenuItem[]>(
     () => [
@@ -173,6 +190,18 @@ export default function ProfileScreen() {
         iconBg: Colors.purpleBg,
         onPress: () => router.push("/guide"),
       },
+      ...(__DEV__
+        ? [
+            {
+              id: "test-push",
+              label: isSendingTestPush ? "جاري إرسال الإشعار..." : "إرسال إشعار اختبار",
+              icon: BellRing,
+              iconColor: Colors.info,
+              iconBg: Colors.infoBg,
+              onPress: handleSendTestPush,
+            },
+          ]
+        : []),
       // {
       //   id: "invite",
       //   label: "دعوة الأشخاص",
@@ -190,7 +219,7 @@ export default function ProfileScreen() {
         onPress: handleLogout,
       },
     ],
-    [openAccountSheet, handleLogout, router],
+    [openAccountSheet, handleLogout, router, isSendingTestPush, handleSendTestPush],
   );
 
   const settingsButton = (
