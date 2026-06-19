@@ -4,9 +4,26 @@ import type { ImperativeRouter } from "expo-router";
 import { Platform } from "react-native";
 
 type NotificationData = Record<string, unknown>;
+type RegisterOptions = {
+  throwOnFailure?: boolean;
+};
+
+type TestPushResponse = {
+  success?: boolean;
+  message?: string;
+  data?: {
+    device_count?: number;
+    sent_count?: number;
+  };
+};
 
 const PRIVATE_SESSIONS_CHANNEL_ID = "private_sessions";
-const PRIVATE_SESSION_ACTIONS = new Set(["new_booking", "teacher_assigned", "test_push"]);
+const PRIVATE_SESSION_ACTIONS = new Set([
+  "new_booking",
+  "teacher_assigned",
+  "trial_request_new",
+  "test_push",
+]);
 
 async function loadConstants() {
   const constantsModule = await import("expo-constants");
@@ -60,6 +77,16 @@ async function ensurePrivateSessionsChannel() {
   });
 }
 
+function failRegistration(message: string, options: RegisterOptions): null {
+  if (__DEV__) {
+    console.warn(`[push] ${message}`);
+  }
+  if (options.throwOnFailure) {
+    throw new Error(message);
+  }
+  return null;
+}
+
 export async function configureForegroundNotifications(): Promise<void> {
   const Notifications = await loadNotificationsIfSupported();
   if (!Notifications) return;
@@ -74,17 +101,23 @@ export async function configureForegroundNotifications(): Promise<void> {
   });
 }
 
-export async function registerForPushNotifications(): Promise<string | null> {
+export async function registerForPushNotifications(
+  options: RegisterOptions = {},
+): Promise<string | null> {
   const Constants = await loadConstants();
-  const Notifications = await loadNotificationsIfSupported();
-  if (!Notifications) return null;
+
+  if (Constants.appOwnership === "expo") {
+    return failRegistration(
+      "Expo Go لا يدعم remote push notifications. استخدم Development Build.",
+      options,
+    );
+  }
+
+  const Notifications = await import("expo-notifications");
 
   const Device = await import("expo-device");
   if (!Device.isDevice) {
-    if (__DEV__) {
-      console.warn("[push] Push notifications require a physical device.");
-    }
-    return null;
+    return failRegistration("Push notifications تحتاج موبايل حقيقي، وليس emulator.", options);
   }
 
   await ensurePrivateSessionsChannel();
@@ -98,15 +131,16 @@ export async function registerForPushNotifications(): Promise<string | null> {
   }
 
   if (finalStatus !== "granted") {
-    if (__DEV__) {
-      console.warn("[push] Notification permission was not granted.");
-    }
-    return null;
+    return failRegistration("صلاحية الإشعارات غير مفعلة لهذا التطبيق.", options);
   }
 
   const projectId = getProjectId(Constants);
+  if (!projectId) {
+    return failRegistration("Expo projectId غير موجود في إعدادات التطبيق.", options);
+  }
+
   const tokenResponse = await Notifications.getExpoPushTokenAsync(
-    projectId ? { projectId } : undefined,
+    { projectId },
   );
   const expoPushToken = tokenResponse.data;
 
@@ -137,9 +171,13 @@ export async function registerNotificationResponseHandler(
   return () => subscription.remove();
 }
 
-export async function sendTestPushNotification(): Promise<void> {
-  await api.post(API_ENDPOINTS.NOTIFICATIONS.TEST_PUSH, {
+export async function sendTestPushNotification(): Promise<TestPushResponse> {
+  await registerForPushNotifications({ throwOnFailure: true });
+
+  const response = await api.post<TestPushResponse>(API_ENDPOINTS.NOTIFICATIONS.TEST_PUSH, {
     title: "اختبار إشعار",
     body: "ده إشعار تجربة على موبايل المدرس",
   });
+
+  return response.data;
 }

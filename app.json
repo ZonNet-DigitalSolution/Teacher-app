@@ -21,7 +21,8 @@
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
-      "package": "com.zonnet.teacherapp"
+      "package": "com.zonnet.teacherapp",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",

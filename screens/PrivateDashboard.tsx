@@ -17,8 +17,8 @@ type PrivateDashboardProps = {
   isLoading: boolean;
   isRefreshing: boolean;
   actionLoadingId: string | null;
-  onAccept: (id: string) => void | Promise<void>;
-  onReject: (id: string) => void | Promise<void>;
+  onAccept: (booking: PrivateSessionBooking) => void | Promise<void>;
+  onReject: (booking: PrivateSessionBooking) => void | Promise<void>;
   onRefresh: () => void;
 };
 

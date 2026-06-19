@@ -150,9 +150,14 @@ function PushNotificationRegistrar() {
       .then((token) => {
         if (token) {
           logStartup("push token registered");
+        } else {
+          didRegisterPushToken.current = false;
         }
       })
-      .catch((error) => warnStartup("push token registration failed", error));
+      .catch((error) => {
+        didRegisterPushToken.current = false;
+        warnStartup("push token registration failed", error);
+      });
   }, [isAuthenticated, isInitialized]);
 
   return null;

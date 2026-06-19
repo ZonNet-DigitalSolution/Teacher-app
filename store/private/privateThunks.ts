@@ -1,6 +1,7 @@
 import { normalizeError } from "@/services/api";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { privateService } from "./privateService";
+import type { PrivateSessionBooking } from "./privateTypes";
 
 export const fetchPrivateBookings = createAsyncThunk(
   "private/fetchBookings",
@@ -15,10 +16,10 @@ export const fetchPrivateBookings = createAsyncThunk(
 
 export const acceptPrivateBooking = createAsyncThunk(
   "private/acceptBooking",
-  async (id: string, { rejectWithValue }) => {
+  async (booking: PrivateSessionBooking, { rejectWithValue }) => {
     try {
-      await privateService.acceptBooking(id);
-      return id;
+      await privateService.acceptBooking(booking);
+      return booking.id;
     } catch (error) {
       return rejectWithValue(normalizeError(error));
     }
@@ -27,10 +28,10 @@ export const acceptPrivateBooking = createAsyncThunk(
 
 export const rejectPrivateBooking = createAsyncThunk(
   "private/rejectBooking",
-  async (id: string, { rejectWithValue }) => {
+  async (booking: PrivateSessionBooking, { rejectWithValue }) => {
     try {
-      await privateService.rejectBooking(id);
-      return id;
+      await privateService.rejectBooking(booking);
+      return booking.id;
     } catch (error) {
       return rejectWithValue(normalizeError(error));
     }

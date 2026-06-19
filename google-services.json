@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "355377354382",
+    "project_id": "teacher-app-f28ad",
+    "storage_bucket": "teacher-app-f28ad.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:355377354382:android:45c8097aadc4aef0305bdf",
+        "android_client_info": {
+          "package_name": "com.zonnet.teacherapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALJ6EXMS-I5Qb4HDlnbrbo0qjAtU8br64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

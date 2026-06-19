@@ -2,8 +2,12 @@ export type PrivateTabId = "new" | "accepted" | "cancelled";
 
 export type PrivateBookingStatus = "pending_teacher" | "accepted" | "cancelled";
 
+export type PrivateBookingSource = "private_booking" | "one_to_one_session" | "trial_request";
+
 export type PrivateSessionBooking = {
   id: string;
+  backendId: string;
+  source: PrivateBookingSource;
   studentName: string;
   subject: string;
   date: string;

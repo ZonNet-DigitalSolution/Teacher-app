@@ -206,9 +206,9 @@ export default function PrivateScreen() {
   }, [dispatch]);
 
   const handleAccept = useCallback(
-    async (id: string) => {
+    async (booking: PrivateSessionBooking) => {
       try {
-        await dispatch(acceptPrivateBooking(id)).unwrap();
+        await dispatch(acceptPrivateBooking(booking)).unwrap();
         dispatch(fetchPrivateBookings({ refresh: true }));
       } catch {
         // Global API alert is handled by services/api.ts.
@@ -218,9 +218,9 @@ export default function PrivateScreen() {
   );
 
   const handleReject = useCallback(
-    async (id: string) => {
+    async (booking: PrivateSessionBooking) => {
       try {
-        await dispatch(rejectPrivateBooking(id)).unwrap();
+        await dispatch(rejectPrivateBooking(booking)).unwrap();
         dispatch(fetchPrivateBookings({ refresh: true }));
       } catch {
         // Global API alert is handled by services/api.ts.

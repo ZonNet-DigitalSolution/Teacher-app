@@ -10,8 +10,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 interface RequestCardProps {
   item: PrivateSessionBooking;
   isBusy?: boolean;
-  onAccept: (id: string) => void | Promise<void>;
-  onReject: (id: string) => void | Promise<void>;
+  onAccept: (booking: PrivateSessionBooking) => void | Promise<void>;
+  onReject: (booking: PrivateSessionBooking) => void | Promise<void>;
 }
 
 export function RequestCard({ item, isBusy = false, onAccept, onReject }: RequestCardProps) {
@@ -57,7 +57,7 @@ export function RequestCard({ item, isBusy = false, onAccept, onReject }: Reques
       <View style={styles.actions}>
         <TouchableOpacity
           style={[styles.rejectBtn, isBusy && styles.disabledBtn]}
-          onPress={() => onReject(item.id)}
+          onPress={() => onReject(item)}
           activeOpacity={0.8}
           disabled={isBusy}
         >
@@ -65,7 +65,7 @@ export function RequestCard({ item, isBusy = false, onAccept, onReject }: Reques
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.acceptBtn, isBusy && styles.disabledBtn]}
-          onPress={() => onAccept(item.id)}
+          onPress={() => onAccept(item)}
           activeOpacity={0.8}
           disabled={isBusy}
         >

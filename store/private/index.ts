@@ -6,6 +6,7 @@ export {
   rejectPrivateBooking,
 } from "./privateThunks";
 export type {
+  PrivateBookingSource,
   PrivateBookingStatus,
   PrivateBookingsByTab,
   PrivateSessionBooking,

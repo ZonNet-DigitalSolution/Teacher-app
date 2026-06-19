@@ -3,6 +3,7 @@ import { EditProfileSheet } from "@/components/Ui/edit-profile-sheet";
 import { ScreenHeader } from "@/components/Ui/screen-header";
 import { Colors } from "@/constants/colors";
 import { useAuth } from "@/hooks/use-auth";
+import { normalizeError } from "@/services/api";
 import { sendTestPushNotification } from "@/services/pushNotificationsService";
 import { fetchProfile } from "@/store/teacher";
 import { useRouter } from "expo-router";
@@ -131,10 +132,19 @@ export default function ProfileScreen() {
 
     try {
       setIsSendingTestPush(true);
-      await sendTestPushNotification();
-      Alert.alert("تم الإرسال", "تم إرسال إشعار الاختبار إلى موبايل المدرس الحالي.");
-    } catch {
-      Alert.alert("تعذر الإرسال", "تأكد من تسجيل الجهاز ومن صلاحية الإشعارات.");
+      const result = await sendTestPushNotification();
+      const deviceCount = result.data?.device_count ?? 0;
+      const sentCount = result.data?.sent_count ?? 0;
+      Alert.alert(
+        "تم إرسال اختبار الإشعار",
+        `الأجهزة المسجلة: ${deviceCount}\nالإشعارات المرسلة: ${sentCount}`,
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? normalizeError(error)
+          : "تأكد من تسجيل الجهاز ومن صلاحية الإشعارات.";
+      Alert.alert("تعذر الإرسال", message);
     } finally {
       setIsSendingTestPush(false);
     }

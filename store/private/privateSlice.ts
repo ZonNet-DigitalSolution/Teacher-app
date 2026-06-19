@@ -50,7 +50,7 @@ const privateSlice = createSlice({
         state.isRefreshing = false;
       })
       .addCase(acceptPrivateBooking.pending, (state, action) => {
-        state.actionLoadingId = action.meta.arg;
+        state.actionLoadingId = action.meta.arg.id;
       })
       .addCase(acceptPrivateBooking.fulfilled, (state, action) => {
         state.requests.new = state.requests.new.filter((request) => request.id !== action.payload);
@@ -61,7 +61,7 @@ const privateSlice = createSlice({
         state.actionLoadingId = null;
       })
       .addCase(rejectPrivateBooking.pending, (state, action) => {
-        state.actionLoadingId = action.meta.arg;
+        state.actionLoadingId = action.meta.arg.id;
       })
       .addCase(rejectPrivateBooking.fulfilled, (state, action) => {
         state.requests.new = state.requests.new.filter((request) => request.id !== action.payload);
