@@ -20,7 +20,8 @@
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.zonnet.teacherapp"
     },
     "web": {
       "output": "static",
@@ -56,6 +57,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d3a50e98-91b0-4dc4-9f98-55adc18bdcca"
+      }
     }
   }
 }
