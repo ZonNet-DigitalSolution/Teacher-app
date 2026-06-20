@@ -4,8 +4,8 @@ import {
   type InboxNotification,
 } from "@/services/notificationsService";
 import { useRouter } from "expo-router";
-import { ArrowLeft, BellRing, CheckCheck, Inbox } from "lucide-react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import { ArrowRight, BellRing, CheckCheck, Inbox } from "lucide-react-native";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -54,17 +54,32 @@ function NotificationItem({
       </View>
 
       {/* Icon */}
-      <View style={[styles.iconWrap, isUnread ? styles.iconWrapUnread : styles.iconWrapRead]}>
-        <BellRing size={18} color={isUnread ? Colors.primary : Colors.textSecondary} />
+      <View
+        style={[
+          styles.iconWrap,
+          isUnread ? styles.iconWrapUnread : styles.iconWrapRead,
+        ]}
+      >
+        <BellRing
+          size={18}
+          color={isUnread ? Colors.primary : Colors.textSecondary}
+        />
       </View>
 
       {/* Content */}
       <View style={styles.itemContent}>
         <View style={styles.itemTop}>
           <Text style={styles.itemTime}>{timeAgo(item.created_at)}</Text>
-          {isUnread && <View style={styles.unreadBadge}><Text style={styles.unreadBadgeText}>جديد</Text></View>}
+          {isUnread && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>جديد</Text>
+            </View>
+          )}
         </View>
-        <Text style={[styles.itemTitle, isUnread && styles.itemTitleUnread]} numberOfLines={1}>
+        <Text
+          style={[styles.itemTitle, isUnread && styles.itemTitleUnread]}
+          numberOfLines={1}
+        >
           {item.data?.title ?? "إشعار"}
         </Text>
         <Text style={styles.itemBody} numberOfLines={2}>
@@ -130,7 +145,10 @@ export default function NotificationsScreen() {
     try {
       await notificationsService.markAllAsRead();
       setNotifications((prev) =>
-        prev.map((n) => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })),
+        prev.map((n) => ({
+          ...n,
+          read_at: n.read_at ?? new Date().toISOString(),
+        })),
       );
     } catch {
       // handled by alertGateway
@@ -170,7 +188,7 @@ export default function NotificationsScreen() {
 
         {/* Back */}
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <ArrowLeft size={20} color={Colors.textSecondary} />
+          <ArrowRight size={20} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -195,7 +213,9 @@ export default function NotificationsScreen() {
             <View style={styles.empty}>
               <Inbox size={52} color={Colors.borderLight} />
               <Text style={styles.emptyTitle}>لا توجد إشعارات</Text>
-              <Text style={styles.emptySubtitle}>ستظهر إشعاراتك الجديدة هنا</Text>
+              <Text style={styles.emptySubtitle}>
+                ستظهر إشعاراتك الجديدة هنا
+              </Text>
             </View>
           }
           ListFooterComponent={

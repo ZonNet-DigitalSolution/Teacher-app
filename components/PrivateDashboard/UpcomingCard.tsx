@@ -73,6 +73,7 @@ export const UpcomingCard = memo(function UpcomingCard({
                 time: item.time,
                 group: item.student,
                 lessonId: item.id,
+                sessionLink: item.sessionLink ?? "",
               },
             })
           }

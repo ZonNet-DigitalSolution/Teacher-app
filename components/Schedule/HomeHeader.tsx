@@ -1,9 +1,9 @@
 import { Colors } from "@/constants/colors";
-import { RootState } from "@/store";
 import { notificationsService } from "@/services/notificationsService";
+import { RootState } from "@/store";
 import { useRouter } from "expo-router";
 import { User } from "lucide-react-native";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSelector } from "react-redux";
 
@@ -15,9 +15,13 @@ export function HomeHeader({ name }: Props) {
     (state: RootState) =>
       state.teacher.profileImage || state.auth.user?.profileImage,
   );
-
   const [unreadCount, setUnreadCount] = useState(0);
+  const [imageError, setImageError] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [userImage]);
 
   const fetchUnread = useCallback(async () => {
     try {
@@ -65,11 +69,12 @@ export function HomeHeader({ name }: Props) {
           <Text style={styles.welcome}>مرحباً بعودتك !</Text>
         </View>
         <View style={styles.avatar}>
-          {userImage ? (
+          {userImage && !imageError ? (
             <Image
               source={{ uri: userImage }}
               style={styles.avatarImage}
               resizeMode="cover"
+              onError={() => setImageError(true)}
             />
           ) : (
             <User size={24} color={Colors.primary} />

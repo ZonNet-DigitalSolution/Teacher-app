@@ -1,4 +1,9 @@
-import type { APISession, GroupItem, SubjectItem, ScheduleState } from "@/types/schedule.types";
+import type {
+  APISession,
+  GroupItem,
+  ScheduleState,
+  SubjectItem,
+} from "@/types/schedule.types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 const initialState: ScheduleState = {

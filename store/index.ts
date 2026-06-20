@@ -15,6 +15,10 @@ export const store = configureStore({
     alert: alertReducer,
     community: communityReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: { warnAfter: 128 },
+    }),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

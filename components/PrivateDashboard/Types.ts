@@ -24,4 +24,5 @@ export type UpcomingSession = {
   date: string;
   time: string;
   isToday: boolean;
+  sessionLink?: string;
 };

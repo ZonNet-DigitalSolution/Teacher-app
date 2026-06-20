@@ -1,8 +1,3 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -14,7 +9,6 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import "../global.css";
 
 import { GlobalAlert } from "@/components/Ui/GlobalAlert";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppDispatch } from "@/hooks/store-hooks";
 import { AppDispatch, RootState, store } from "@/store";
 import { initializeAuth } from "@/store/auth";
@@ -85,11 +79,10 @@ function AlertGatewayRegistrar() {
 
 // ─── Inner Layout (has access to Redux store) ─────────────────────────────────
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
   const isInitialized = useSelector((s: RootState) => s.auth.isInitialized);
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <>
       <AlertGatewayRegistrar />
       <AuthGuard />
       {!isInitialized ? (
@@ -102,12 +95,13 @@ function RootLayoutNav() {
           <Stack.Screen name="group-chat" />
           <Stack.Screen name="add-content" />
           <Stack.Screen name="session-content" />
+          <Stack.Screen name="meeting-view" />
         </Stack>
       )}
       {/* Global alert overlay — rendered above everything, including modals */}
       <GlobalAlert />
-      <StatusBar style="auto" backgroundColor="transparent" translucent />
-    </ThemeProvider>
+      <StatusBar style="auto" />
+    </>
   );
 }
 

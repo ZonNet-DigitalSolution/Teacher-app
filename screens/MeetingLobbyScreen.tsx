@@ -18,6 +18,7 @@ export function MeetingLobbyScreen() {
     time?: string;
     group?: string;
     lessonId?: string;
+    sessionLink?: string;
   }>();
 
   const session = useMemo(
@@ -27,6 +28,7 @@ export function MeetingLobbyScreen() {
       time: params.time ?? "—",
       group: params.group ?? "—",
       lessonId: params.lessonId ?? "0",
+      sessionLink: params.sessionLink ?? "",
     }),
     [params],
   );
@@ -42,12 +44,10 @@ export function MeetingLobbyScreen() {
 
   const handleJoin = useCallback(() => {
     router.replace({
-      pathname: "/meeting-room",
+      pathname: "/meeting-view",
       params: {
         subject: session.subject,
-        date: session.date,
-        time: session.time,
-        lessonId: session.lessonId,
+        sessionLink: session.sessionLink,
       },
     });
   }, [router, session]);

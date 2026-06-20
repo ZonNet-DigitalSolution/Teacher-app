@@ -101,6 +101,11 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [accountSheetVisible, setAccountSheetVisible] = useState(false);
   const [editSheetVisible, setEditSheetVisible] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [teacher.profileImage]);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -236,10 +241,11 @@ export default function ProfileScreen() {
 
           <View style={styles.profileAvatarWrap}>
             <View style={styles.profileAvatar}>
-              {teacher.profileImage ? (
+              {teacher.profileImage && !imageError ? (
                 <Image
                   source={{ uri: teacher.profileImage }}
                   style={styles.profileAvatarImg}
+                  onError={() => setImageError(true)}
                 />
               ) : teacher.isLoading ? (
                 <ActivityIndicator size="small" color={Colors.primary} />

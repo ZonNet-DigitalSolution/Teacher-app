@@ -6,15 +6,15 @@ import { sessionsService } from "./sessionsService";
 import {
   seedDaySessions,
   setAddGroups,
-  setAddSubjects,
   setAddGroupsLoading,
+  setAddSubjects,
   setCreating,
   setDaySessions,
   setError,
   setLoading,
-  setSessions,
   setSessionCount,
   setSessionCountLoading,
+  setSessions,
 } from "./sessionsSlice";
 
 export const fetchWeekSessions = createAsyncThunk(
@@ -63,7 +63,8 @@ export const fetchAddSessionsGroups = createAsyncThunk(
   async (_, { dispatch }) => {
     try {
       dispatch(setAddGroupsLoading(true));
-      const { groups, subjects } = await sessionsService.fetchGroupsAndSubjects();
+      const { groups, subjects } =
+        await sessionsService.fetchGroupsAndSubjects();
       dispatch(setAddGroups(groups));
       dispatch(setAddSubjects(subjects));
       return { groups, subjects };
