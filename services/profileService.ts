@@ -19,7 +19,6 @@ export const profileService = {
     if (payload.country) body.country = payload.country;
     if (payload.bio) body.bio = payload.bio;
     if (payload.workType) body.employment_type = payload.workType;
-    console.log(body);
     const { data } = await api.post(API_ENDPOINTS.AUTH.UPDATE_PROFILE, body);
     return data?.data ?? data;
   },

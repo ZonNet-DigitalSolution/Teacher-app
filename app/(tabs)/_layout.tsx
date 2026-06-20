@@ -5,8 +5,8 @@ import GroupIcon from "@/assets/svg/groupIcon.svg";
 import { RootState } from "@/store";
 import { Tabs } from "expo-router";
 import { UserCircle } from "lucide-react-native";
-import React, { memo } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import React, { memo, useEffect, useState } from "react";
+import { ColorValue, Image, StyleSheet, Text, View } from "react-native";
 import { useSelector } from "react-redux";
 
 type LucideIcon = React.ComponentType<{
@@ -23,12 +23,18 @@ const TabIcon = memo(function TabIcon({
   focused,
 }: {
   icon: LucideIcon;
-  color: string;
+  color: ColorValue;
   focused: boolean;
 }) {
   return (
     <View style={[styles.tabIconWrap, focused && styles.tabIconWrapActive]}>
-      <Icon size={22} width={22} height={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
+      <Icon
+        size={22}
+        width={22}
+        height={22}
+        color={color as string}
+        strokeWidth={focused ? 2.5 : 1.8}
+      />
     </View>
   );
 });
@@ -40,14 +46,20 @@ const BadgeIcon = memo(function BadgeIcon({
   badgeCount,
 }: {
   icon: LucideIcon;
-  color: string;
+  color: ColorValue;
   focused: boolean;
   badgeCount: number;
 }) {
   return (
     <View style={styles.badgeContainer}>
       <View style={[styles.tabIconWrap, focused && styles.tabIconWrapActive]}>
-        <Icon size={22} width={22} height={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
+        <Icon
+          size={22}
+          width={22}
+          height={22}
+          color={color as string}
+          strokeWidth={focused ? 2.5 : 1.8}
+        />
       </View>
       {badgeCount > 0 && (
         <View style={styles.badge}>
@@ -62,18 +74,43 @@ const ProfileTabIcon = memo(function ProfileTabIcon({
   color,
   focused,
 }: {
-  color: string;
+  color: ColorValue;
   focused: boolean;
 }) {
-  const profileImage = useSelector((state: RootState) => state.teacher.profileImage);
+  const profileImage = useSelector(
+    (state: RootState) => state.teacher.profileImage,
+  );
+  const [imageError, setImageError] = useState(false);
 
-  return profileImage ? (
-    <View style={[styles.profileImageWrap, focused && styles.profileImageWrapFocused]}>
-      <Image source={{ uri: profileImage }} style={styles.profileImage} resizeMode="cover" />
-    </View>
-  ) : (
+  useEffect(() => {
+    setImageError(false);
+  }, [profileImage]);
+
+  if (profileImage && !imageError) {
+    return (
+      <View
+        style={[
+          styles.profileImageWrap,
+          focused && styles.profileImageWrapFocused,
+        ]}
+      >
+        <Image
+          source={{ uri: profileImage }}
+          style={styles.profileImage}
+          resizeMode="cover"
+          onError={() => setImageError(true)}
+        />
+      </View>
+    );
+  }
+
+  return (
     <View style={[styles.tabIconWrap, focused && styles.tabIconWrapActive]}>
-      <UserCircle size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
+      <UserCircle
+        size={22}
+        color={color as string}
+        strokeWidth={focused ? 2.5 : 1.8}
+      />
     </View>
   );
 });
@@ -120,7 +157,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen name="private" options={{ href: null }} />
       <Tabs.Screen
         name="index"
         options={{
@@ -130,6 +166,7 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="private" options={{ tabBarItemStyle: { display: "none" } }} />
     </Tabs>
   );
 }

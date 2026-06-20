@@ -1,12 +1,5 @@
 import { useFonts } from "expo-font";
-import {
-  DarkTheme,
-  DefaultTheme,
-  Stack,
-  ThemeProvider,
-  useRouter,
-  useSegments,
-} from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef } from "react";
@@ -16,7 +9,6 @@ import { Provider, useSelector } from "react-redux";
 import "../global.css";
 
 import { GlobalAlert } from "@/components/Ui/GlobalAlert";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppDispatch } from "@/hooks/store-hooks";
 import { RootState, store } from "@/store";
 import { initializeAuth } from "@/store/auth";
@@ -165,11 +157,10 @@ function PushNotificationRegistrar() {
 
 // ─── Inner Layout ─────────────────────────────────────────────────────────────
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
   const isInitialized = useSelector((s: RootState) => s.auth.isInitialized);
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <>
       <AlertGatewayRegistrar />
       <AuthGuard />
       <PushNotificationRegistrar />
@@ -191,11 +182,12 @@ function RootLayoutNav() {
           <Stack.Screen name="notifications" />
           <Stack.Screen name="meeting-lobby" />
           <Stack.Screen name="meeting-room" />
+          <Stack.Screen name="meeting-view" />
         </Stack>
       )}
       <GlobalAlert />
       <StatusBar style="auto" />
-    </ThemeProvider>
+    </>
   );
 }
 

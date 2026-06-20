@@ -4,7 +4,7 @@ import { Lesson } from "@/types/schedule.types";
 import { getPackageStyle } from "@/utils/package-factory";
 import { useRouter } from "expo-router";
 import { Pencil } from "lucide-react-native";
-import React, { memo, useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { EditLessonSheet } from "./EditLessonSheet";
 import { BellBadgeIcon, DoneBadgeIcon, UpcomingBadgeIcon } from "./icons";
@@ -42,6 +42,7 @@ export const LessonCard = memo(function LessonCard({ lesson }: Props) {
         time: lesson.time,
         group: lesson.group,
         lessonId: lesson.id,
+        sessionLink: lesson.sessionLink ?? "",
       },
     });
 
@@ -224,6 +225,7 @@ const styles = StyleSheet.create({
   },
   bottomRow: {
     flexDirection: "row-reverse",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 14,
@@ -234,7 +236,12 @@ const styles = StyleSheet.create({
   },
   groupInfo: { flexDirection: "row", alignItems: "center", gap: 6 },
   groupText: { fontFamily: "Alex_400", fontSize: 11, color: "#555" },
-  btn: { paddingHorizontal: 22, paddingVertical: 10, borderRadius: 24 },
+  btn: {
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 24,
+    marginRight: "auto",
+  },
   btnActive: { backgroundColor: "#E89B32" },
   btnDisabled: { backgroundColor: "#9E9E9E" },
   btnText: { fontFamily: "Alex_700", fontSize: 11, color: "#fff" },
@@ -252,6 +259,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
+    marginRight: "auto",
     backgroundColor: "#165072",
   },
   contentBtnText: { fontFamily: "Alex_700", fontSize: 11, color: "#fff" },
