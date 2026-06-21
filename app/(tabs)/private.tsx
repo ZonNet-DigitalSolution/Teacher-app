@@ -39,16 +39,27 @@ type BookingCardTone = "success" | "error";
 const PRIVATE_TABS: {
   id: PrivateTabId;
   label: string;
-  icon: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>;
+  icon: React.ComponentType<{
+    size: number;
+    color: string;
+    strokeWidth?: number;
+  }>;
 }[] = [
   { id: "new", label: "طلبات جديدة", icon: Radio },
   { id: "accepted", label: "الطلبات المقبولة", icon: CheckCircle2 },
   { id: "cancelled", label: "الملغية", icon: XCircle },
 ];
 
-const TONE_STYLES: Record<BookingCardTone, { bg: string; color: string; border: string }> = {
+const TONE_STYLES: Record<
+  BookingCardTone,
+  { bg: string; color: string; border: string }
+> = {
   success: { bg: "#ECFDF3", color: Colors.success, border: "#BBF7D0" },
-  error: { bg: Colors.errorBg, color: Colors.error, border: Colors.errorBorder },
+  error: {
+    bg: Colors.errorBg,
+    color: Colors.error,
+    border: Colors.errorBorder,
+  },
 };
 
 const EMPTY_TEXT: Record<PrivateTabId, { title: string; hint: string }> = {
@@ -106,7 +117,13 @@ function PrivateBookingList({
       }
     >
       {items.length > 0 ? (
-        items.map((item) => <PrivateBookingCard key={item.id} item={item} tone={tabId === "accepted" ? "success" : "error"} />)
+        items.map((item) => (
+          <PrivateBookingCard
+            key={item.id}
+            item={item}
+            tone={tabId === "accepted" ? "success" : "error"}
+          />
+        ))
       ) : (
         <PrivateEmptyState tabId={tabId} />
       )}
@@ -136,7 +153,9 @@ function PrivateBookingCard({
           <Text style={styles.bookingTitle}>حصة {item.subject}</Text>
           <Text style={styles.bookingSubtitle}>{subtitle}</Text>
         </View>
-        <View style={[styles.bookingStatusBadge, { backgroundColor: toneStyle.bg }]}>
+        <View
+          style={[styles.bookingStatusBadge, { backgroundColor: toneStyle.bg }]}
+        >
           <Text style={[styles.bookingStatusText, { color: toneStyle.color }]}>
             {item.statusLabel}
           </Text>
@@ -153,7 +172,9 @@ function PrivateBookingCard({
       </View>
 
       <View style={[styles.metaStrip, { backgroundColor: toneStyle.bg }]}>
-        <Text style={[styles.metaText, { color: toneStyle.color }]}>{item.duration}</Text>
+        <Text style={[styles.metaText, { color: toneStyle.color }]}>
+          {item.duration}
+        </Text>
       </View>
     </View>
   );
@@ -175,7 +196,11 @@ function InfoPill({
   icon: Icon,
   label,
 }: {
-  icon: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>;
+  icon: React.ComponentType<{
+    size: number;
+    color: string;
+    strokeWidth?: number;
+  }>;
   label: string;
 }) {
   return (
@@ -236,49 +261,60 @@ export default function PrivateScreen() {
   };
 
   const backButton = (
-    <TouchableOpacity onPress={() => router.replace("/(tabs)")} style={styles.backBtn}>
+    <TouchableOpacity
+      onPress={() => router.replace("/(tabs)")}
+      style={styles.backBtn}
+    >
       <ChevronRight size={22} color={Colors.textPrimary} />
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScreenHeader title="الحصص الفردية" icon={User} rightAction={backButton} />
+      <ScreenHeader
+        title="الحصص الفردية"
+        icon={User}
+        rightAction={backButton}
+      />
       <View style={styles.tabsWrap}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabsContent}
-        >
-          {PRIVATE_TABS.map((tabItem) => {
-            const isActive = activeTab === tabItem.id;
-            const Icon = tabItem.icon;
-            const count = counts[tabItem.id];
+        {PRIVATE_TABS.map((tabItem) => {
+          const isActive = activeTab === tabItem.id;
+          const Icon = tabItem.icon;
+          const count = counts[tabItem.id];
 
-            return (
-              <TouchableOpacity
-                key={tabItem.id}
-                style={[styles.tabPill, isActive && styles.tabPillActive]}
-                onPress={() => router.setParams({ tab: tabItem.id })}
-                activeOpacity={0.82}
+          return (
+            <TouchableOpacity
+              key={tabItem.id}
+              style={[styles.tabPill, isActive && styles.tabPillActive]}
+              onPress={() => router.setParams({ tab: tabItem.id })}
+              activeOpacity={0.82}
+            >
+              {/* <Icon
+                size={16}
+                color={isActive ? "#fff" : Colors.textMuted}
+                strokeWidth={2}
+              /> */}
+              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+                {tabItem.label}
+              </Text>
+              <View
+                style={[
+                  styles.tabCountBadge,
+                  isActive && styles.tabCountBadgeActive,
+                ]}
               >
-                <Icon
-                  size={16}
-                  color={isActive ? "#fff" : Colors.textMuted}
-                  strokeWidth={2}
-                />
-                <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
-                  {tabItem.label}
+                <Text
+                  style={[
+                    styles.tabCountText,
+                    isActive && styles.tabCountTextActive,
+                  ]}
+                >
+                  {count}
                 </Text>
-                <View style={[styles.tabCountBadge, isActive && styles.tabCountBadgeActive]}>
-                  <Text style={[styles.tabCountText, isActive && styles.tabCountTextActive]}>
-                    {count}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
       {activeTab === "new" ? (
         <PrivateDashboard
@@ -308,29 +344,29 @@ const styles = StyleSheet.create({
   tabsWrap: {
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
-    paddingBottom: 12,
-  },
-  tabsContent: {
     flexDirection: "row-reverse",
-    gap: 10,
+    justifyContent: "space-between",
+    paddingBottom: 12,
     paddingHorizontal: 16,
+    gap: 10,
   },
   tabPill: {
-    minHeight: 42,
+    // minHeight: 42,
     flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    borderRadius: 12,
-    backgroundColor: "#F3F4F6",
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    borderRadius: 50,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   tabPillActive: {
     backgroundColor: "#0F5B78",
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: "Alex_600",
     color: Colors.textMuted,
     writingDirection: "rtl",
@@ -343,20 +379,14 @@ const styles = StyleSheet.create({
     minWidth: 30,
     height: 24,
     borderRadius: 12,
-    paddingHorizontal: 8,
-    backgroundColor: "#0F5B78",
     alignItems: "center",
     justifyContent: "center",
   },
-  tabCountBadgeActive: {
-    backgroundColor: "#F3A42A",
-    borderWidth: 1,
-    borderColor: "#fff",
-  },
+
   tabCountText: {
     fontSize: 13,
     fontFamily: "Alex_700",
-    color: "#fff",
+    color: "#111",
     lineHeight: 16,
   },
   tabCountTextActive: {

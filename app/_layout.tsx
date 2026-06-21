@@ -1,5 +1,6 @@
 import { AppLoadingScreen } from "@/components/Ui/AppLoadingScreen";
 import { GlobalAlert } from "@/components/Ui/GlobalAlert";
+import { useAlertGateway } from "@/hooks/use-alert-gateway";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { RootState, store } from "@/store";
@@ -19,7 +20,7 @@ function RootLayoutNav() {
   const isInitialized = useSelector((s: RootState) => s.auth.isInitialized);
 
   useAuthGuard();
-  // useAlertGateway();
+  useAlertGateway();
   usePushNotifications();
 
   if (!isInitialized) return <AppLoadingScreen />;

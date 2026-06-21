@@ -1,9 +1,9 @@
-import { RootState } from "@/store";
 import {
   configureForegroundNotifications,
   registerForPushNotifications,
   registerNotificationResponseHandler,
 } from "@/services/pushNotificationsService";
+import { RootState } from "@/store";
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
@@ -16,30 +16,14 @@ export function usePushNotifications() {
   const isInitialized = useSelector((s: RootState) => s.auth.isInitialized);
 
   useEffect(() => {
-    let isMounted = true;
-    let cleanup: (() => void) | null = null;
-
     configureForegroundNotifications();
-
-    registerNotificationResponseHandler(router).then((removeListener) => {
-      if (isMounted) {
-        cleanup = removeListener;
-      } else {
-        removeListener();
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      cleanup?.();
-    };
+    const removeListener = registerNotificationResponseHandler(router);
+    return () => removeListener();
   }, [router]);
 
   useEffect(() => {
-    if (!isInitialized) return;
-
-    if (!isAuthenticated) {
-      didRegisterToken.current = false;
+    if (!isInitialized || !isAuthenticated) {
+      if (!isAuthenticated) didRegisterToken.current = false;
       return;
     }
 
@@ -48,8 +32,6 @@ export function usePushNotifications() {
 
     registerForPushNotifications().then((token) => {
       if (!token) didRegisterToken.current = false;
-    }).catch(() => {
-      didRegisterToken.current = false;
     });
   }, [isAuthenticated, isInitialized]);
 }

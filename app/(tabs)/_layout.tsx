@@ -4,8 +4,8 @@ import GroupIcon from "@/assets/svg/groupIcon.svg";
 
 import { RootState } from "@/store";
 import { Tabs } from "expo-router";
-import { UserCircle } from "lucide-react-native";
-import React, { memo, useEffect, useState } from "react";
+import { UserCircle, UserRound } from "lucide-react-native";
+import React, { memo, useState } from "react";
 import { ColorValue, Image, StyleSheet, Text, View } from "react-native";
 import { useSelector } from "react-redux";
 
@@ -63,7 +63,9 @@ const BadgeIcon = memo(function BadgeIcon({
       </View>
       {badgeCount > 0 && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badgeCount > 9 ? "9+" : badgeCount}</Text>
+          <Text style={styles.badgeText}>
+            {badgeCount > 9 ? "9+" : badgeCount}
+          </Text>
         </View>
       )}
     </View>
@@ -80,11 +82,8 @@ const ProfileTabIcon = memo(function ProfileTabIcon({
   const profileImage = useSelector(
     (state: RootState) => state.teacher.profileImage,
   );
-  const [imageError, setImageError] = useState(false);
-
-  useEffect(() => {
-    setImageError(false);
-  }, [profileImage]);
+  const [erroredUrl, setErroredUrl] = useState<string | null>(null);
+  const imageError = erroredUrl === profileImage;
 
   if (profileImage && !imageError) {
     return (
@@ -98,7 +97,7 @@ const ProfileTabIcon = memo(function ProfileTabIcon({
           source={{ uri: profileImage }}
           style={styles.profileImage}
           resizeMode="cover"
-          onError={() => setImageError(true)}
+          onError={() => setErroredUrl(profileImage)}
         />
       </View>
     );
@@ -116,7 +115,12 @@ const ProfileTabIcon = memo(function ProfileTabIcon({
 });
 
 export default function TabLayout() {
-  const communityBadge = useSelector((state: RootState) => state.navigation.communityBadgeCount);
+  const communityBadge = useSelector(
+    (state: RootState) => state.navigation.communityBadgeCount,
+  );
+  const privateBadge = useSelector(
+    (state: RootState) => state.private.requests.new.length,
+  );
 
   return (
     <Tabs
@@ -144,7 +148,12 @@ export default function TabLayout() {
         options={{
           title: "المجتمع",
           tabBarIcon: ({ color, focused }) => (
-            <BadgeIcon icon={Chat} color={color} focused={focused} badgeCount={communityBadge} />
+            <BadgeIcon
+              icon={Chat}
+              color={color}
+              focused={focused}
+              badgeCount={communityBadge}
+            />
           ),
         }}
       />
@@ -158,6 +167,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="private"
+        options={{
+          title: "فردى",
+          tabBarIcon: ({ color, focused }) => (
+            <BadgeIcon
+              icon={UserRound}
+              color={color}
+              focused={focused}
+              badgeCount={privateBadge}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: "الجدول",
@@ -166,7 +189,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen name="private" options={{ tabBarItemStyle: { display: "none" } }} />
     </Tabs>
   );
 }
@@ -190,7 +212,12 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   tabItem: { paddingTop: 6, paddingBottom: 6 },
-  tabLabel: { fontSize: 10, fontWeight: "600", marginTop: 2, fontFamily: "Alex_400" },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    marginTop: 2,
+    fontFamily: "Alex_400",
+  },
   tabIconWrap: {
     width: 36,
     height: 36,
