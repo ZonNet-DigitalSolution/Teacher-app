@@ -2,9 +2,12 @@ import { API_ENDPOINTS } from "@/constants/endpoints";
 import { api } from "@/services/api";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
+import type * as NotificationsType from "expo-notifications";
 import type { ImperativeRouter } from "expo-router";
 import { Platform } from "react-native";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const N = (): typeof NotificationsType => require("expo-notifications");
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -50,9 +53,9 @@ function shouldOpenPrivateSessions(data: Record<string, unknown>): boolean {
 
 async function ensurePrivateSessionsChannel(): Promise<void> {
   if (Platform.OS !== "android") return;
-  await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
+  await N().setNotificationChannelAsync(CHANNEL_ID, {
     name: "Private sessions",
-    importance: Notifications.AndroidImportance.HIGH,
+    importance: N().AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 250, 250],
     lightColor: "#D18C2D",
   });
@@ -62,7 +65,7 @@ async function ensurePrivateSessionsChannel(): Promise<void> {
 
 export function configureForegroundNotifications(): void {
   if (isExpoGo()) return;
-  Notifications.setNotificationHandler({
+  N().setNotificationHandler({
     handleNotification: async () => ({
       shouldShowBanner: true,
       shouldShowList: true,
@@ -77,18 +80,18 @@ export async function registerForPushNotifications(): Promise<string | null> {
 
   await ensurePrivateSessionsChannel();
 
-  const { status: currentStatus } = await Notifications.getPermissionsAsync();
+  const { status: currentStatus } = await N().getPermissionsAsync();
   const finalStatus =
     currentStatus === "granted"
       ? currentStatus
-      : (await Notifications.requestPermissionsAsync()).status;
+      : (await N().requestPermissionsAsync()).status;
 
   if (finalStatus !== "granted") return null;
 
   const projectId = getProjectId();
   if (!projectId) return null;
 
-  const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync({ projectId });
+  const { data: expoPushToken } = await N().getExpoPushTokenAsync({ projectId });
 
   await api.post(API_ENDPOINTS.NOTIFICATIONS.REGISTER_DEVICE, {
     fcm_token: expoPushToken,
@@ -106,7 +109,7 @@ export function registerNotificationResponseHandler(
 ): () => void {
   if (isExpoGo()) return () => undefined;
 
-  const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+  const subscription = N().addNotificationResponseReceivedListener((response) => {
     const data = (response.notification.request.content.data ?? {}) as Record<string, unknown>;
     if (shouldOpenPrivateSessions(data)) {
       router.push("/(tabs)/private?tab=new");

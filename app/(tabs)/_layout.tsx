@@ -7,6 +7,7 @@ import { Tabs } from "expo-router";
 import { UserCircle, UserRound } from "lucide-react-native";
 import React, { memo, useState } from "react";
 import { ColorValue, Image, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
 
 type LucideIcon = React.ComponentType<{
@@ -115,6 +116,7 @@ const ProfileTabIcon = memo(function ProfileTabIcon({
 });
 
 export default function TabLayout() {
+  const { bottom } = useSafeAreaInsets();
   const communityBadge = useSelector(
     (state: RootState) => state.navigation.communityBadgeCount,
   );
@@ -130,7 +132,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: "#D18C2D",
         tabBarInactiveTintColor: "#7F8081",
         tabBarLabelStyle: styles.tabLabel,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [styles.tabBar, { height: 68 + bottom, paddingBottom: bottom }],
         tabBarItemStyle: styles.tabItem,
       }}
     >

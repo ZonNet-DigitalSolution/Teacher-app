@@ -5,13 +5,11 @@ import {
   X,
   XCircle,
 } from "lucide-react-native";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   Animated,
   Modal,
-  PanResponder,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -107,7 +105,8 @@ function ProgressBar({
   color: string;
   alertId: string;
 }) {
-  const width = useRef(new Animated.Value(1)).current;
+  "use no memo";
+  const [width] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
     width.setValue(1);
@@ -179,10 +178,7 @@ function AlertCard({ alert, onDismiss }: AlertCardProps) {
 
   return (
     <View
-      style={[
-        styles.card,
-        { borderColor: config.borderColor, borderTopColor: config.color },
-      ]}
+      style={[styles.card, { borderColor: config.borderColor }]}
       accessibilityRole="alert"
       accessibilityLiveRegion="assertive"
     >
@@ -300,26 +296,66 @@ function AlertCard({ alert, onDismiss }: AlertCardProps) {
 // ─── GlobalAlert (root) ───────────────────────────────────────────────────────
 
 export function GlobalAlert() {
+  "use no memo";
   const dispatch = useAppDispatch();
   const queue = useAppSelector(selectAlertQueue);
   const current: Alert | undefined = queue[0];
 
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const cardOpacity = useRef(new Animated.Value(0)).current;
-  const cardTranslateY = useRef(new Animated.Value(30)).current;
-  const cardScale = useRef(new Animated.Value(0.92)).current;
-  const swipeTranslateY = useRef(new Animated.Value(0)).current;
+  const [overlayOpacity] = useState(() => new Animated.Value(0));
+  const [cardOpacity] = useState(() => new Animated.Value(0));
+  const [cardTranslateY] = useState(() => new Animated.Value(30));
+  const [cardScale] = useState(() => new Animated.Value(0.92));
+  const [swipeTranslateY] = useState(() => new Animated.Value(0));
 
   const lastIdRef = useRef<string | null>(null);
   const isDismissingRef = useRef(false);
-  // Stable ref so PanResponder always calls the latest handleDismiss
-  const handleDismissRef = useRef<() => void>(() => {});
 
-  // ── Enter animation ────────────────────────────────────────────────────────
   const currentId = current?.id;
   const currentTitle = current?.title;
   const currentMessage = current?.message;
 
+  // ── Dismiss with exit animation ────────────────────────────────────────────
+  const handleDismiss = useCallback(() => {
+    if (isDismissingRef.current) return;
+    isDismissingRef.current = true;
+    const alertId = current?.id;
+
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardOpacity, {
+        toValue: 0,
+        duration: 160,
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardTranslateY, {
+        toValue: 16,
+        duration: 160,
+        useNativeDriver: true,
+      }),
+      Animated.spring(cardScale, {
+        toValue: 0.94,
+        damping: 20,
+        stiffness: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      if (alertId) alertCallbackRegistry.remove(alertId);
+      dispatch(dismissAlert());
+    });
+  }, [
+    current?.id,
+    dispatch,
+    overlayOpacity,
+    cardOpacity,
+    cardTranslateY,
+    cardScale,
+  ]);
+
+  // ── Enter animation ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!currentId || currentId === lastIdRef.current) return;
     lastIdRef.current = currentId;
@@ -375,84 +411,9 @@ export function GlobalAlert() {
   // ── Auto-dismiss ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!current?.autoDismiss) return;
-    const timer = setTimeout(
-      () => handleDismissRef.current(),
-      current.autoDismiss,
-    );
+    const timer = setTimeout(() => handleDismiss(), current.autoDismiss);
     return () => clearTimeout(timer);
-  }, [current?.id]);
-
-  // ── Dismiss with exit animation ────────────────────────────────────────────
-  const handleDismiss = useCallback(() => {
-    if (isDismissingRef.current) return;
-    isDismissingRef.current = true;
-    // Capture now — safe even if `current` changes during the 180ms animation
-    const alertId = current?.id;
-
-    Animated.parallel([
-      Animated.timing(overlayOpacity, {
-        toValue: 0,
-        duration: 180,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cardOpacity, {
-        toValue: 0,
-        duration: 160,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cardTranslateY, {
-        toValue: 16,
-        duration: 160,
-        useNativeDriver: true,
-      }),
-      Animated.spring(cardScale, {
-        toValue: 0.94,
-        damping: 20,
-        stiffness: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      if (alertId) alertCallbackRegistry.remove(alertId);
-      dispatch(dismissAlert());
-    });
-  }, [
-    current?.id,
-    dispatch,
-    overlayOpacity,
-    cardOpacity,
-    cardTranslateY,
-    cardScale,
-  ]);
-
-  // Keep ref in sync every render so PanResponder always calls the latest
-  handleDismissRef.current = handleDismiss;
-
-  // ── Swipe-up-to-dismiss gesture ────────────────────────────────────────────
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, { dy }) => dy < -8,
-      onPanResponderMove: (_, { dy }) => {
-        if (dy < 0) swipeTranslateY.setValue(dy);
-      },
-      onPanResponderRelease: (_, { dy, vy }) => {
-        if (dy < -60 || vy < -0.8) {
-          Animated.timing(swipeTranslateY, {
-            toValue: -300,
-            duration: 200,
-            useNativeDriver: true,
-          }).start(() => handleDismissRef.current());
-        } else {
-          Animated.spring(swipeTranslateY, {
-            toValue: 0,
-            damping: 20,
-            stiffness: 300,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    }),
-  ).current;
+  }, [current?.id, handleDismiss]);
 
   if (!current) return null;
 
@@ -489,7 +450,6 @@ export function GlobalAlert() {
               ],
             },
           ]}
-          {...panResponder.panHandlers}
         >
           <AlertCard alert={current} onDismiss={handleDismiss} />
 
@@ -526,22 +486,9 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     backgroundColor: Colors.surface,
-    borderRadius: 20,
     borderWidth: 1,
-    borderTopWidth: 3,
     paddingHorizontal: 20,
     paddingVertical: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#0f172a",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.18,
-        shadowRadius: 24,
-      },
-      android: {
-        elevation: 14,
-      },
-    }),
   },
 
   header: {
