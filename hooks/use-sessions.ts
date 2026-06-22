@@ -22,11 +22,15 @@ export function useSessions() {
     dispatch(fetchWeekSessions());
   }, [dispatch]);
 
+  // Boolean primitive — effect only re-fires when THIS date's loaded status changes,
+  // not when any other date's sessions load into the cache
+  const isSelectedDateLoaded = Boolean(selectedDate && daySessions[selectedDate]);
+
   useEffect(() => {
-    if (selectedDate && !daySessions[selectedDate]) {
+    if (selectedDate && !isSelectedDateLoaded) {
       dispatch(fetchDaySessions(selectedDate));
     }
-  }, [selectedDate, daySessions, dispatch]);
+  }, [selectedDate, isSelectedDateLoaded, dispatch]);
 
   const handleDayPress = useCallback(
     (index: number) => setActiveIndex(index),

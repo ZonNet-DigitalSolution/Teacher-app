@@ -1,14 +1,18 @@
-export { default as privateReducer } from "./privateSlice";
-export { clearPrivateError } from "./privateSlice";
+import type { RootState } from "@/store";
+import { createSelector } from "@reduxjs/toolkit";
+export { clearPrivateError, default as privateReducer } from "./privateSlice";
 export {
   acceptPrivateBooking,
   fetchPrivateBookings,
-  rejectPrivateBooking,
+  rejectPrivateBooking
 } from "./privateThunks";
 export type {
-  PrivateBookingSource,
-  PrivateBookingStatus,
-  PrivateBookingsByTab,
-  PrivateSessionBooking,
-  PrivateTabId,
+  PrivateBookingsByTab, PrivateBookingSource,
+  PrivateBookingStatus, PrivateSessionBooking,
+  PrivateTabId
 } from "./privateTypes";
+
+export const selectNewRequestCount = createSelector(
+  (state: RootState) => state.private.requests.new,
+  (newRequests) => newRequests.length,
+);

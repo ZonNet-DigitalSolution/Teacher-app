@@ -4,7 +4,7 @@ import { useAlertGateway } from "@/hooks/use-alert-gateway";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { RootState, store } from "@/store";
-import { useFonts } from "expo-font";
+import { loadAsync, useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -27,7 +27,7 @@ function RootLayoutNav() {
 
   return (
     <>
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ headerShown: false, animation: "none" }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="modal" options={{ presentation: "modal" }} />
@@ -57,16 +57,13 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  // Only the 5 weights visible on first-rendered screens — keeps splash short
   const [fontsLoaded, fontError] = useFonts({
-    Alex_100: require("../assets/fonts/Alexandria-Thin.ttf"),
-    Alex_200: require("../assets/fonts/Alexandria-ExtraLight.ttf"),
-    Alex_300: require("../assets/fonts/Alexandria-Light.ttf"),
     Alex_400: require("../assets/fonts/Alexandria-Regular.ttf"),
     Alex_500: require("../assets/fonts/Alexandria-Medium.ttf"),
     Alex_600: require("../assets/fonts/Alexandria-SemiBold.ttf"),
     Alex_700: require("../assets/fonts/Alexandria-Bold.ttf"),
     Alex_800: require("../assets/fonts/Alexandria-ExtraBold.ttf"),
-    Alex_900: require("../assets/fonts/Alexandria-Black.ttf"),
   });
 
   const appReady = fontsLoaded || !!fontError;
@@ -74,6 +71,13 @@ export default function RootLayout() {
   useEffect(() => {
     if (!appReady) return;
     SplashScreen.hideAsync();
+    // Defer the 4 rarely-used weights; failure is non-critical
+    loadAsync({
+      Alex_100: require("../assets/fonts/Alexandria-Thin.ttf"),
+      Alex_200: require("../assets/fonts/Alexandria-ExtraLight.ttf"),
+      Alex_300: require("../assets/fonts/Alexandria-Light.ttf"),
+      Alex_900: require("../assets/fonts/Alexandria-Black.ttf"),
+    }).catch(() => {});
   }, [appReady]);
 
   if (!appReady) return null;

@@ -1,23 +1,25 @@
 import { Day } from "@/types/schedule.types";
-import React, { memo } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { memo, useCallback } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = {
   day: Day;
   isActive: boolean;
-  onPress: () => void;
+  index: number;
+  onDayPress: (index: number) => void;
 };
 
-export const DayPill = memo(function DayPill({ day, isActive, onPress }: Props) {
+export const DayPill = memo(function DayPill({ day, isActive, index, onDayPress }: Props) {
+  const handlePress = useCallback(() => onDayPress(index), [index, onDayPress]);
+
   return (
-    <TouchableOpacity
+    <Pressable
       style={[
         styles.pill,
         isActive && styles.pillActive,
         day.isToday && !isActive && styles.pillToday,
       ]}
-      onPress={onPress}
-      activeOpacity={0.7}
+      onPress={handlePress}
     >
       <Text style={[styles.name, isActive && styles.textActive]}>
         {day.name}
@@ -27,7 +29,7 @@ export const DayPill = memo(function DayPill({ day, isActive, onPress }: Props) 
         {day.month}
       </Text>
       {isActive && <View style={styles.dot} />}
-    </TouchableOpacity>
+    </Pressable>
   );
 });
 

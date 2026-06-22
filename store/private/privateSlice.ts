@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { PrivateState } from "./privateTypes";
 import {
   acceptPrivateBooking,
   fetchPrivateBookings,
   rejectPrivateBooking,
 } from "./privateThunks";
+import type { PrivateState } from "./privateTypes";
 
 const initialState: PrivateState = {
   requests: {
@@ -33,7 +33,8 @@ const privateSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchPrivateBookings.pending, (state, action) => {
-        const shouldRefresh = action.meta.arg?.refresh || hasLoadedBookings(state);
+        const shouldRefresh =
+          action.meta.arg?.refresh || hasLoadedBookings(state);
         state.error = null;
         state.isLoading = !shouldRefresh;
         state.isRefreshing = shouldRefresh;
@@ -45,7 +46,9 @@ const privateSlice = createSlice({
       })
       .addCase(fetchPrivateBookings.rejected, (state, action) => {
         state.error =
-          typeof action.payload === "string" ? action.payload : "تعذر تحميل طلبات الحصص الفردية";
+          typeof action.payload === "string"
+            ? action.payload
+            : "تعذر تحميل طلبات الحصص الفردية";
         state.isLoading = false;
         state.isRefreshing = false;
       })
@@ -53,22 +56,32 @@ const privateSlice = createSlice({
         state.actionLoadingId = action.meta.arg.id;
       })
       .addCase(acceptPrivateBooking.fulfilled, (state, action) => {
-        state.requests.new = state.requests.new.filter((request) => request.id !== action.payload);
+        state.requests.new = state.requests.new.filter(
+          (request) => request.id !== action.payload,
+        );
         state.actionLoadingId = null;
       })
       .addCase(acceptPrivateBooking.rejected, (state, action) => {
-        state.error = typeof action.payload === "string" ? action.payload : "تعذر قبول الطلب";
+        state.error =
+          typeof action.payload === "string"
+            ? action.payload
+            : "تعذر قبول الطلب";
         state.actionLoadingId = null;
       })
       .addCase(rejectPrivateBooking.pending, (state, action) => {
         state.actionLoadingId = action.meta.arg.id;
       })
       .addCase(rejectPrivateBooking.fulfilled, (state, action) => {
-        state.requests.new = state.requests.new.filter((request) => request.id !== action.payload);
+        state.requests.new = state.requests.new.filter(
+          (request) => request.id !== action.payload,
+        );
         state.actionLoadingId = null;
       })
       .addCase(rejectPrivateBooking.rejected, (state, action) => {
-        state.error = typeof action.payload === "string" ? action.payload : "تعذر رفض الطلب";
+        state.error =
+          typeof action.payload === "string"
+            ? action.payload
+            : "تعذر رفض الطلب";
         state.actionLoadingId = null;
       });
   },

@@ -122,7 +122,7 @@ type DisplayMsg =
   | { kind: "date"; id: string; label: string }
   | { kind: "msg"; id: string; msg: ChatMessage; isOwn: boolean };
 
-function MessageItem({ item }: { item: DisplayMsg }) {
+const MessageItem = React.memo(function MessageItem({ item }: { item: DisplayMsg }) {
   if (item.kind === "date") {
     return (
       <View style={styles.dateChipWrap}>
@@ -167,7 +167,9 @@ function MessageItem({ item }: { item: DisplayMsg }) {
       </View>
     </View>
   );
-}
+});
+
+const ROLE_COLORS: Record<string, string> = { teacher: Colors.primary };
 
 // ── Members Sheet ─────────────────────────────────────────────────────────────
 
@@ -182,7 +184,7 @@ function MembersSheet({
   loading: boolean;
   onClose: () => void;
 }) {
-  const translateY = useRef(new Animated.Value(500)).current;
+  const translateY = useMemo(() => new Animated.Value(500), []);
 
   useEffect(() => {
     Animated.timing(translateY, {
@@ -191,8 +193,6 @@ function MembersSheet({
       useNativeDriver: true,
     }).start();
   }, [visible, translateY]);
-
-  const ROLE_COLORS: Record<string, string> = { teacher: Colors.primary };
 
   return (
     <Modal
@@ -286,7 +286,7 @@ export default function GroupChatScreen() {
   const [membersSheetVisible, setMembersSheetVisible] = useState(false);
   const [members, setMembers] = useState<ChatMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
-  const menuAnim = useRef(new Animated.Value(0)).current;
+  const menuAnim = useMemo(() => new Animated.Value(0), []);
   const listRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
 
@@ -301,16 +301,8 @@ export default function GroupChatScreen() {
     }
   }, [groupId, dispatch]);
 
-  // Scroll to bottom whenever the message list first populates or grows
-  useEffect(() => {
-    if (rawMessages.length > 0) {
-      const t = setTimeout(() => scrollToBottom(false), 100);
-      return () => clearTimeout(t);
-    }
-  }, [rawMessages.length, scrollToBottom]);
-
-  // Build display list: inject date dividers
-  const displayList = useCallback((): DisplayMsg[] => {
+  // Build display list: inject date dividers — memoized so typing/emoji state changes don't re-sort
+  const listData = useMemo((): DisplayMsg[] => {
     const items: DisplayMsg[] = [];
     let lastDate = "";
     const sorted = [...rawMessages].sort((a, b) => a.id - b.id);
@@ -324,7 +316,6 @@ export default function GroupChatScreen() {
           label: formatDateLabel(msg.created_at),
         });
       }
-
       items.push({
         kind: "msg",
         id: String(msg.id),
@@ -334,6 +325,20 @@ export default function GroupChatScreen() {
     }
     return items;
   }, [rawMessages, myTeacherId]);
+
+  const renderMessage = useCallback(
+    ({ item }: { item: DisplayMsg }) => <MessageItem item={item} />,
+    [],
+  );
+
+  // Scroll only when a new message is appended — not on every re-render
+  const prevMsgLen = useRef(0);
+  useEffect(() => {
+    if (listData.length > prevMsgLen.current) {
+      scrollToBottom(true);
+      prevMsgLen.current = listData.length;
+    }
+  }, [listData.length, scrollToBottom]);
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
@@ -424,8 +429,6 @@ export default function GroupChatScreen() {
     [handleEditGroup, handleViewMembers],
   );
 
-  const listData = displayList();
-
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* ── Header ── */}
@@ -483,11 +486,15 @@ export default function GroupChatScreen() {
             ref={listRef}
             data={listData}
             keyExtractor={(m) => m.id}
-            renderItem={({ item }) => <MessageItem item={item} />}
+            renderItem={renderMessage}
             contentContainerStyle={styles.msgList}
             showsVerticalScrollIndicator={false}
-            onLayout={() => scrollToBottom(false)}
-            onContentSizeChange={() => scrollToBottom(false)}
+            initialNumToRender={20}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            removeClippedSubviews
+            updateCellsBatchingPeriod={50}
+            maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
           />
         )}
 
@@ -865,7 +872,11 @@ const styles = StyleSheet.create({
 
   // ── Members sheet ─────────────────────────────────────
   sheetOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0,0,0,0.45)",
   },
   membersSheet: {

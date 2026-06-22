@@ -1,9 +1,9 @@
 import { Colors } from "@/constants/colors";
 import { Day, Lesson } from "@/types/schedule.types";
-import React, { memo, useCallback } from "react";
+import { Image } from "expo-image";
+import React, { memo } from "react";
 import {
   ActivityIndicator,
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -29,11 +29,6 @@ export const DailyView = memo(function DailyView({
   isLoading,
   error,
 }: Props) {
-  const handlePress = useCallback(
-    (i: number) => () => onDayPress(i),
-    [onDayPress],
-  );
-
   return (
     <>
       {/* Day pills — always visible */}
@@ -46,8 +41,9 @@ export const DailyView = memo(function DailyView({
           <DayPill
             key={day.date}
             day={day}
+            index={i}
             isActive={activeIndex === i}
-            onPress={handlePress(i)}
+            onDayPress={onDayPress}
           />
         ))}
       </ScrollView>
@@ -79,7 +75,8 @@ export const DailyView = memo(function DailyView({
             <Image
               source={require("@/assets/images/no-sessions.png")}
               style={styles.emptyImage}
-              resizeMode="contain"
+              contentFit="contain"
+              cachePolicy="memory-disk"
             />
             <Text style={styles.emptyText}>لا توجد حصص اليوم</Text>
           </View>

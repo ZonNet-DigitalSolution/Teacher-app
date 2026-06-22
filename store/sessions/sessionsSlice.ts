@@ -6,6 +6,8 @@ import type {
 } from "@/types/schedule.types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+const MAX_CACHED_DAYS = 14;
+
 const initialState: ScheduleState = {
   sessions: [],
   daySessions: {},
@@ -43,6 +45,11 @@ const sessionsSlice = createSlice({
     ) {
       state.daySessions[action.payload.date] = action.payload.sessions;
       state.selectedDate = action.payload.date;
+      // Evict the oldest date when cache exceeds limit
+      const keys = Object.keys(state.daySessions);
+      if (keys.length > MAX_CACHED_DAYS) {
+        delete state.daySessions[keys.sort()[0]];
+      }
     },
     seedDaySessions(
       state,

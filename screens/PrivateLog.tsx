@@ -12,27 +12,12 @@ import {
   View,
 } from "react-native";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const LOG_DATA: LogSession[] = [
-  { id: "1", student: "سارة أحمد", subject: "الجبر المتقدم", date: "٢٥ فبراير", time: "10:00 - 10:45", status: "completed", price: "٢٥٠", rating: 5 },
-  { id: "2", student: "عمر خالد", subject: "حساب التفاضل", date: "٢٦ فبراير", time: "14:30 - 15:15", status: "completed", price: "٢٥٠", rating: 4 },
-  { id: "3", student: "نورة سعد", subject: "الإحصاء التطبيقي", date: "٢٧ فبراير", time: "11:00 - 11:45", status: "cancelled", price: "٣٠٠" },
-  { id: "4", student: "فهد العتيبي", subject: "الرياضيات الأساسية", date: "٢٨ فبراير", time: "09:00 - 09:45", status: "approved", price: "٢٠٠" },
-  { id: "5", student: "منى الزهراني", subject: "الجبر", date: "١ مارس", time: "15:00 - 15:45", status: "pending", price: "٢٥٠" },
-  { id: "6", student: "أحمد الغامدي", subject: "حساب التفاضل", date: "٢ مارس", time: "10:00 - 10:45", status: "completed", price: "٢٥٠", rating: 5 },
-  { id: "7", student: "ريم العتيبي", subject: "الإحصاء", date: "٣ مارس", time: "13:00 - 13:45", status: "approved", price: "٢٠٠" },
-  { id: "8", student: "خالد السبيعي", subject: "الجبر المتقدم", date: "٤ مارس", time: "16:00 - 16:45", status: "completed", price: "٢٥٠", rating: 3 },
-];
-
-// ─── Main Component ───────────────────────────────────────────────────────────
-
-export function PrivateLog() {
+export function PrivateLog({ sessions = [] }: { sessions?: LogSession[] }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<SessionStatus | "all">("all");
 
   const filtered = useMemo(() => {
-    return LOG_DATA.filter((s) => {
+    return sessions.filter((s) => {
       const matchStatus = filter === "all" || s.status === filter;
       const matchSearch =
         search.trim() === "" ||

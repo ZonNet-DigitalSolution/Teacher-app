@@ -3,10 +3,12 @@ import Chat from "@/assets/svg/chat.svg";
 import GroupIcon from "@/assets/svg/groupIcon.svg";
 
 import { RootState } from "@/store";
+import { selectNewRequestCount } from "@/store/private";
+import { Image } from "expo-image";
 import { Tabs } from "expo-router";
 import { UserCircle, UserRound } from "lucide-react-native";
 import React, { memo, useState } from "react";
-import { ColorValue, Image, StyleSheet, Text, View } from "react-native";
+import { ColorValue, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
 
@@ -97,7 +99,8 @@ const ProfileTabIcon = memo(function ProfileTabIcon({
         <Image
           source={{ uri: profileImage }}
           style={styles.profileImage}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
           onError={() => setErroredUrl(profileImage)}
         />
       </View>
@@ -120,20 +123,29 @@ export default function TabLayout() {
   const communityBadge = useSelector(
     (state: RootState) => state.navigation.communityBadgeCount,
   );
-  const privateBadge = useSelector(
-    (state: RootState) => state.private.requests.new.length,
-  );
+  const privateBadge = useSelector(selectNewRequestCount);
 
   return (
     <Tabs
+      screenListeners={({ navigation }) => ({
+        tabPress: (e) => {
+          if (navigation.isFocused()) e.preventDefault();
+        },
+      })}
       screenOptions={{
         headerShown: false,
+        animation: "none",
         tabBarShowLabel: true,
         tabBarActiveTintColor: "#D18C2D",
         tabBarInactiveTintColor: "#7F8081",
         tabBarLabelStyle: styles.tabLabel,
-        tabBarStyle: [styles.tabBar, { height: 68 + bottom, paddingBottom: bottom }],
+        tabBarStyle: [
+          styles.tabBar,
+          { height: 68 + bottom, paddingBottom: bottom },
+        ],
         tabBarItemStyle: styles.tabItem,
+
+        tabBarButton: (props) => <Pressable {...(props as any)} android_ripple={null} />,
       }}
     >
       <Tabs.Screen

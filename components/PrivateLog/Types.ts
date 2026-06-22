@@ -32,8 +32,6 @@ export const STATUS_CONFIG: Record<
 
 export const FILTER_TABS: { id: SessionStatus | "all"; label: string }[] = [
   { id: "all", label: "الكل" },
-  { id: "pending", label: "معلقة" },
   { id: "approved", label: "مؤكدة" },
-  { id: "completed", label: "مكتملة" },
   { id: "cancelled", label: "ملغاة" },
 ];

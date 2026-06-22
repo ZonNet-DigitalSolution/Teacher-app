@@ -7,14 +7,11 @@ import { useSessions } from "@/hooks/use-sessions";
 import { AppDispatch, RootState } from "@/store";
 import { fetchProfile } from "@/store/teacher";
 import { useRouter } from "expo-router";
-import { ChevronLeft, GraduationCap } from "lucide-react-native";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import {
   ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,6 +22,7 @@ export default function ScheduleScreen() {
   const teacherName = useSelector(
     (state: RootState) => state.teacher.name || state.auth?.user?.name,
   );
+  const hasProfile = useSelector((state: RootState) => !!state.teacher.name);
   const {
     days,
     activeSessions,
@@ -38,31 +36,13 @@ export default function ScheduleScreen() {
   } = useSessions();
 
   useEffect(() => {
-    dispatch(fetchProfile());
-  }, [dispatch]);
+    if (!hasProfile) dispatch(fetchProfile());
+  }, [dispatch, hasProfile]);
 
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <HomeHeader name={teacherName || "المعلم"} />
-
-        {/* Private session requests banner */}
-        <TouchableOpacity
-          style={styles.privateBanner}
-          activeOpacity={0.8}
-          onPress={() => router.push("/(tabs)/private?tab=new")}
-        >
-          <View style={styles.privateBannerIcon}>
-            <GraduationCap size={22} color={Colors.primary} />
-          </View>
-          <View style={styles.privateBannerText}>
-            <Text style={styles.privateBannerTitle}>طلبات الحصص الفردية</Text>
-            <Text style={styles.privateBannerSub}>اعرض وأدِر طلبات الطلاب</Text>
-          </View>
-          <View style={styles.privateBannerArrow}>
-            <ChevronLeft size={20} color={Colors.primary} strokeWidth={2.4} />
-          </View>
-        </TouchableOpacity>
 
         <SectionHeader scheduleView={view} onToggleView={handleViewChange} />
 

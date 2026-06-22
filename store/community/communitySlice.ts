@@ -4,6 +4,8 @@ import type {
 } from "@/store/community/communityService";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+const MAX_MESSAGES_PER_GROUP = 200;
+
 interface CommunityState {
   groups: ChatGroup[];
   groupsLoading: boolean;
@@ -73,6 +75,10 @@ const communitySlice = createSlice({
         state.messagesByGroup[groupId] = [];
       }
       state.messagesByGroup[groupId].push(message);
+      // Keep only the most recent messages to prevent unbounded memory growth
+      if (state.messagesByGroup[groupId].length > MAX_MESSAGES_PER_GROUP) {
+        state.messagesByGroup[groupId] = state.messagesByGroup[groupId].slice(-MAX_MESSAGES_PER_GROUP);
+      }
     },
     setMessagesLoading(state, action: PayloadAction<boolean>) {
       state.messagesLoading = action.payload;

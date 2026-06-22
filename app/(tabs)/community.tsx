@@ -104,6 +104,8 @@ function formatTime(iso: string): string {
   return date.toLocaleDateString("ar-EG", { month: "short", day: "numeric" });
 }
 
+const ListFooter = () => <View style={styles.listFooter} />;
+
 // ── Screen ───────────────────────────────────────────────────────────────────
 export default function CommunityScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -138,6 +140,10 @@ export default function CommunityScreen() {
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
+        initialNumToRender={10}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        removeClippedSubviews
         ListHeaderComponent={
           <View style={styles.searchBar}>
             <TouchableOpacity style={styles.filterBtn}>
@@ -164,7 +170,7 @@ export default function CommunityScreen() {
             <Text style={styles.emptyText}>لا توجد مجموعات</Text>
           )
         }
-        ListFooterComponent={<View style={{ height: 100 }} />}
+        ListFooterComponent={ListFooter}
       />
     </SafeAreaView>
   );
@@ -284,4 +290,5 @@ const styles = StyleSheet.create({
     fontFamily: "Alex_400",
     color: Colors.textSecondary,
   },
+  listFooter: { height: 100 },
 });
