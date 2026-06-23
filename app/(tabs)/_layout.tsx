@@ -145,7 +145,9 @@ export default function TabLayout() {
         ],
         tabBarItemStyle: styles.tabItem,
 
-        tabBarButton: (props) => <Pressable {...(props as any)} android_ripple={null} />,
+        tabBarButton: (props) => (
+          <Pressable {...(props as any)} android_ripple={null} />
+        ),
       }}
     >
       <Tabs.Screen
