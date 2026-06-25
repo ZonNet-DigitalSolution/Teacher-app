@@ -1,4 +1,5 @@
 import { EditGroupSheet } from "@/components/Ui/edit-group-sheet";
+import { MembersSheet } from "@/components/Ui/members-sheet";
 import { Colors } from "@/constants/colors";
 import { AppDispatch, RootState } from "@/store";
 import {
@@ -24,7 +25,6 @@ import {
   Send,
   Smile,
   Users,
-  X,
 } from "lucide-react-native";
 import React, {
   useCallback,
@@ -33,13 +33,12 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import {
   ActivityIndicator,
   Animated,
   FlatList,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -49,7 +48,6 @@ import {
 } from "react-native";
 import {
   SafeAreaView,
-  useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -176,100 +174,6 @@ const MessageItem = React.memo(function MessageItem({
   );
 });
 
-const ROLE_COLORS: Record<string, string> = { teacher: Colors.primary };
-
-// ── Members Sheet ─────────────────────────────────────────────────────────────
-
-function MembersSheet({
-  visible,
-  members,
-  loading,
-  onClose,
-}: {
-  visible: boolean;
-  members: ChatMember[];
-  loading: boolean;
-  onClose: () => void;
-}) {
-  const { bottom } = useSafeAreaInsets();
-  const translateY = useMemo(() => new Animated.Value(500), []);
-
-  useEffect(() => {
-    Animated.timing(translateY, {
-      toValue: visible ? 0 : 500,
-      duration: visible ? 300 : 240,
-      useNativeDriver: true,
-    }).start();
-  }, [visible, translateY]);
-
-  return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="none"
-      onRequestClose={onClose}
-    >
-      <Pressable style={styles.sheetOverlay} onPress={onClose} />
-      <Animated.View
-        style={[styles.membersSheet, { transform: [{ translateY }] }]}
-      >
-        <View style={styles.membersHandle} />
-        <View style={styles.membersHeader}>
-          <TouchableOpacity
-            onPress={onClose}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <X size={20} color={Colors.textSecondary} />
-          </TouchableOpacity>
-          <Text style={styles.membersTitle}>أعضاء المجموعة</Text>
-          <View style={{ width: 28 }} />
-        </View>
-
-        {loading ? (
-          <ActivityIndicator style={{ marginTop: 40 }} color={Colors.primary} />
-        ) : (
-          <FlatList
-            data={members}
-            keyExtractor={(m) => String(m.id)}
-            contentContainerStyle={{
-              paddingBottom: 32 + bottom,
-              paddingHorizontal: 16,
-            }}
-            showsVerticalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={styles.memberSep} />}
-            ListEmptyComponent={
-              <Text style={styles.membersEmpty}>لا يوجد أعضاء</Text>
-            }
-            renderItem={({ item }) => {
-              const avatarBg =
-                ROLE_COLORS[item.type ?? ""] ?? Colors.primaryLight;
-              return (
-                <View style={styles.memberRow}>
-                  <View style={styles.memberInfo}>
-                    {item.role ? (
-                      <View style={styles.memberRoleBadge}>
-                        <Text style={styles.memberRoleText}>{item.role}</Text>
-                      </View>
-                    ) : null}
-                    <Text style={styles.memberName}>{item.name}</Text>
-                  </View>
-                  <View
-                    style={[styles.memberAvatar, { backgroundColor: avatarBg }]}
-                  >
-                    <Text style={styles.memberAvatarText}>
-                      {item.name?.[0] ?? "؟"}
-                    </Text>
-                  </View>
-                </View>
-              );
-            }}
-          />
-        )}
-      </Animated.View>
-    </Modal>
-  );
-}
-
 // ── Screen ────────────────────────────────────────────────────────────────────
 export default function GroupChatScreen() {
   const router = useRouter();
@@ -289,7 +193,6 @@ export default function GroupChatScreen() {
     [messagesByGroup, groupId],
   );
 
-  const { bottom: safeBottom } = useSafeAreaInsets();
   const { image: SubjectIcon, bgColor } = getPackageStyle(name ?? "");
   const [input, setInput] = useState("");
   const [showEmojis, setShowEmojis] = useState(false);
@@ -301,6 +204,7 @@ export default function GroupChatScreen() {
   const menuAnim = useMemo(() => new Animated.Value(0), []);
   const listRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
+  const isNearBottomRef = useRef(true);
 
   const scrollToBottom = useCallback((animated = false) => {
     listRef.current?.scrollToEnd({ animated });
@@ -355,6 +259,7 @@ export default function GroupChatScreen() {
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || sending) return;
+    isNearBottomRef.current = true;
     setInput("");
     setShowEmojis(false);
     await dispatch(sendMessage({ groupId, content: text }));
@@ -442,7 +347,7 @@ export default function GroupChatScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -484,11 +389,7 @@ export default function GroupChatScreen() {
       </View>
 
       {/* ── Messages ── */}
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={0}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         {messagesLoading && rawMessages.length === 0 ? (
           <View style={styles.loadingWrap}>
             <ActivityIndicator color={Colors.primary} />
@@ -506,10 +407,17 @@ export default function GroupChatScreen() {
             windowSize={10}
             removeClippedSubviews
             updateCellsBatchingPeriod={50}
-            maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-            onContentSizeChange={() =>
-              listRef.current?.scrollToEnd({ animated: false })
-            }
+            scrollEventThrottle={100}
+            onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
+            onScroll={({ nativeEvent: { contentOffset, contentSize, layoutMeasurement } }) => {
+              const distFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+              isNearBottomRef.current = distFromBottom < 80;
+            }}
+            onContentSizeChange={() => {
+              if (isNearBottomRef.current) {
+                listRef.current?.scrollToEnd({ animated: false });
+              }
+            }}
           />
         )}
 
@@ -530,8 +438,7 @@ export default function GroupChatScreen() {
         )}
 
         {/* ── Input bar ── */}
-        <View style={{ paddingBottom: safeBottom }}>
-          <View style={styles.inputBar}>
+        <View style={styles.inputBar}>
             <TouchableOpacity
               style={[
                 styles.sendBtn,
@@ -577,7 +484,6 @@ export default function GroupChatScreen() {
               />
             </TouchableOpacity>
           </View>
-        </View>
       </KeyboardAvoidingView>
 
       {/* ── Actions dropdown ── */}
@@ -887,87 +793,4 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
 
-  // ── Members sheet ─────────────────────────────────────
-  sheetOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.45)",
-  },
-  membersSheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: "70%",
-    paddingTop: 12,
-  },
-  membersHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#E0E0E0",
-    alignSelf: "center",
-    marginBottom: 12,
-  },
-  membersHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  membersTitle: {
-    fontFamily: "Alex_700",
-    fontSize: 16,
-    color: Colors.textPrimary,
-  },
-  memberRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    paddingVertical: 12,
-    gap: 12,
-  },
-  memberAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  memberAvatarText: { fontFamily: "Alex_700", fontSize: 15, color: "#fff" },
-  memberInfo: { flex: 1, alignItems: "flex-end", gap: 3 },
-  memberName: {
-    fontFamily: "Alex_600",
-    fontSize: 14,
-    color: Colors.textPrimary,
-    textAlign: "right",
-  },
-  memberRoleBadge: {
-    backgroundColor: Colors.primaryLight,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  memberRoleText: {
-    fontFamily: "Alex_500",
-    fontSize: 11,
-    color: Colors.primary,
-  },
-  memberSep: { height: 1, backgroundColor: Colors.borderLight },
-  membersEmpty: {
-    fontFamily: "Alex_400",
-    fontSize: 14,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    marginTop: 40,
-  },
 });

@@ -197,15 +197,6 @@ export default function GroupsScreen() {
 
       {/* Toolbar */}
       <View style={styles.toolbar}>
-        <TouchableOpacity
-          style={styles.addBtn}
-          activeOpacity={0.85}
-          onPress={() => setAddSheetVisible(true)}
-        >
-          <Text style={styles.addBtnText}>مجموعة جديدة</Text>
-          <Plus size={17} color="#fff" />
-        </TouchableOpacity>
-
         <View>
           <TouchableOpacity
             style={[styles.gradeBtn, filterOpen && styles.gradeBtnActive]}
@@ -255,6 +246,14 @@ export default function GroupsScreen() {
             </View>
           )}
         </View>
+        <TouchableOpacity
+          style={styles.addBtn}
+          activeOpacity={0.85}
+          onPress={() => setAddSheetVisible(true)}
+        >
+          <Text style={styles.addBtnText}>مجموعة جديدة</Text>
+          <Plus size={17} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       {/* Content */}
