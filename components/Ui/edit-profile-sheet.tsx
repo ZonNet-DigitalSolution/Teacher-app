@@ -247,7 +247,6 @@ export function EditProfileSheet({ visible, data, onClose }: Props) {
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: "flex-end" },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.45)",
   },
   sheet: {
@@ -358,8 +357,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     backgroundColor: Colors.primary,
-    borderRadius: 14,
-    paddingVertical: 15,
+    borderRadius: 50,
+    paddingVertical: 11,
     marginTop: 8,
   },
   saveBtnDisabled: { opacity: 0.6 },

@@ -508,7 +508,7 @@ export default function GroupChatScreen() {
             updateCellsBatchingPeriod={50}
             maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
             onContentSizeChange={() =>
-              listRef.current?.scrollToEnd({ animated: true })
+              listRef.current?.scrollToEnd({ animated: false })
             }
           />
         )}

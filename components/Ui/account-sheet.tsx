@@ -101,7 +101,10 @@ export function AccountSheet({ visible, data, onClose, onEdit }: Props) {
 
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={[styles.content, { paddingBottom: bottom + 16 }]}
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: bottom + 16 },
+            ]}
           >
             {/* ── نبذة تعريفية ── */}
             <Text style={styles.sectionTitle}>نبذة تعريفية</Text>
@@ -158,7 +161,6 @@ export function AccountSheet({ visible, data, onClose, onEdit }: Props) {
               <Text style={styles.editBtnText}>تعديل</Text>
               <Pencil size={18} color="#fff" />
             </TouchableOpacity>
-
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -172,7 +174,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.45)",
   },
   sheet: {
@@ -324,8 +325,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     backgroundColor: Colors.primary,
-    borderRadius: 14,
-    paddingVertical: 15,
+    borderRadius: 50,
+    paddingVertical: 11,
   },
   editBtnText: {
     fontFamily: "Alex_700",

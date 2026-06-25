@@ -1,20 +1,18 @@
 import GroupIcon from "@/assets/svg/Group.svg";
 import { AddGroupSheet } from "@/components/Ui/add-group-sheet";
-import { StudentListSheet } from "@/components/Ui/student-list-sheet";
 import { ScreenHeader } from "@/components/Ui/screen-header";
+import { StudentListSheet } from "@/components/Ui/student-list-sheet";
 import { Colors } from "@/constants/colors";
 import { API_ENDPOINTS } from "@/constants/endpoints";
-import { api, normalizeError } from "@/services/api";
-import { Group, GROUP_STATUS_COLORS, GROUP_STATUS_LABELS } from "@/types/group.types";
 import { useAlert } from "@/hooks/use-alert";
+import { api, normalizeError } from "@/services/api";
 import {
-  ChevronDown,
-  Eye,
-  Plus,
-  Trash2,
-  Users,
-} from "lucide-react-native";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+  Group,
+  GROUP_STATUS_COLORS,
+  GROUP_STATUS_LABELS,
+} from "@/types/group.types";
+import { ChevronDown, Eye, Plus, Trash2, Users } from "lucide-react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -24,14 +22,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  ClipPath,
-  Defs,
-  G,
-  Path,
-  Rect,
-  Svg,
-} from "react-native-svg";
+import { ClipPath, Defs, G, Path, Rect, Svg } from "react-native-svg";
 
 // ─── Group card ───────────────────────────────────────────────────────────────
 
@@ -66,13 +57,15 @@ function GroupCard({
 
       {/* Info */}
       <Text style={styles.cardName}>{item.name}</Text>
-      {classList ? (
-        <Text style={styles.cardGrade}>{classList}</Text>
-      ) : null}
+      {classList ? <Text style={styles.cardGrade}>{classList}</Text> : null}
 
       {/* Status badge */}
-      <View style={[styles.statusBadge, { backgroundColor: statusColor + "20" }]}>
-        <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
+      <View
+        style={[styles.statusBadge, { backgroundColor: statusColor + "20" }]}
+      >
+        <Text style={[styles.statusText, { color: statusColor }]}>
+          {statusLabel}
+        </Text>
       </View>
 
       {/* Stats row */}
@@ -155,16 +148,13 @@ export default function GroupsScreen() {
   }, []);
 
   useEffect(() => {
-    fetchGroups();
+    Promise.resolve().then(() => fetchGroups());
   }, [fetchGroups]);
 
-  const deleteGroup = useCallback(
-    async (id: number) => {
-      await api.delete(`${API_ENDPOINTS.GROUPS.DELETE}${id}`);
-      setGroups((prev) => prev.filter((g) => g.id !== id));
-    },
-    [],
-  );
+  const deleteGroup = useCallback(async (id: number) => {
+    await api.delete(`${API_ENDPOINTS.GROUPS.DELETE}${id}`);
+    setGroups((prev) => prev.filter((g) => g.id !== id));
+  }, []);
 
   const handleDelete = useCallback(
     (group: Group) => {
@@ -172,7 +162,11 @@ export default function GroupsScreen() {
         type: "warning",
         title: "حذف المجموعة",
         message: `هل أنت متأكد من حذف "${group.name}"؟ لا يمكن التراجع عن هذا الإجراء.`,
-        confirmAction: { label: "حذف", style: "danger", onPress: () => deleteGroup(group.id) },
+        confirmAction: {
+          label: "حذف",
+          style: "danger",
+          onPress: () => deleteGroup(group.id),
+        },
         cancelAction: { label: "إلغاء", style: "secondary", onPress: () => {} },
       });
     },
@@ -193,8 +187,7 @@ export default function GroupsScreen() {
     if (selectedClass === "الكل") return groups;
     return groups.filter(
       (g) =>
-        g.classes?.includes(selectedClass) ||
-        g.package_name === selectedClass,
+        g.classes?.includes(selectedClass) || g.package_name === selectedClass,
     );
   }, [groups, selectedClass]);
 
@@ -204,14 +197,36 @@ export default function GroupsScreen() {
 
       {/* Toolbar */}
       <View style={styles.toolbar}>
+        <TouchableOpacity
+          style={styles.addBtn}
+          activeOpacity={0.85}
+          onPress={() => setAddSheetVisible(true)}
+        >
+          <Text style={styles.addBtnText}>مجموعة جديدة</Text>
+          <Plus size={17} color="#fff" />
+        </TouchableOpacity>
+
         <View>
           <TouchableOpacity
-            style={styles.gradeBtn}
+            style={[styles.gradeBtn, filterOpen && styles.gradeBtnActive]}
             activeOpacity={0.8}
             onPress={() => setFilterOpen((v) => !v)}
           >
-            <ChevronDown size={16} color={Colors.textPrimary} />
-            <Text style={styles.gradeBtnText}>{selectedClass}</Text>
+            <ChevronDown
+              size={15}
+              color={filterOpen ? Colors.primary : Colors.textSecondary}
+              style={{
+                transform: [{ rotate: filterOpen ? "180deg" : "0deg" }],
+              }}
+            />
+            <Text
+              style={[
+                styles.gradeBtnText,
+                filterOpen && styles.gradeBtnTextActive,
+              ]}
+            >
+              {selectedClass}
+            </Text>
           </TouchableOpacity>
           {filterOpen && (
             <View style={styles.filterDropdown}>
@@ -230,7 +245,7 @@ export default function GroupsScreen() {
                   <Text
                     style={[
                       styles.filterOptionText,
-                      selectedClass === c && { color: Colors.primary },
+                      selectedClass === c && styles.filterOptionTextActive,
                     ]}
                   >
                     {c}
@@ -240,15 +255,6 @@ export default function GroupsScreen() {
             </View>
           )}
         </View>
-
-        <TouchableOpacity
-          style={styles.addBtn}
-          activeOpacity={0.8}
-          onPress={() => setAddSheetVisible(true)}
-        >
-          <Plus size={18} color={Colors.primary} />
-          <Text style={styles.addBtnText}>اضافة مجموعة جديدة</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Content */}
@@ -285,7 +291,7 @@ export default function GroupsScreen() {
               <Text style={styles.emptyTitle}>لا توجد مجموعات</Text>
               <Text style={styles.emptySub}>
                 {selectedClass === "الكل"
-                  ? "اضغط على \"اضافة مجموعة\" للبدء"
+                  ? 'اضغط على "اضافة مجموعة" للبدء'
                   : "لا توجد مجموعات لهذا الصف"}
               </Text>
             </View>
@@ -315,6 +321,7 @@ const styles = StyleSheet.create({
   /* Toolbar */
   toolbar: {
     flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
     gap: 10,
     marginBottom: 16,
@@ -326,46 +333,62 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
+    backgroundColor: Colors.primary,
     borderRadius: 12,
-    paddingVertical: 12,
+    paddingVertical: 13,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  addBtnText: { fontFamily: "Alex_700", fontSize: 13, color: Colors.primary },
+  addBtnText: { fontFamily: "Alex_700", fontSize: 13, color: "#fff" },
   gradeBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-  },
-  gradeBtnText: { fontFamily: "Alex_700", fontSize: 13, color: Colors.textPrimary },
-  filterDropdown: {
-    position: "absolute",
-    top: 50,
-    left: 0,
-    backgroundColor: "#fff",
-    borderRadius: 12,
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    minWidth: 140,
+    borderRadius: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 14,
+    backgroundColor: "#fff",
+  },
+  gradeBtnActive: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
+  },
+  gradeBtnText: {
+    fontFamily: "Alex_600",
+    fontSize: 13,
+    color: Colors.textPrimary,
+  },
+  gradeBtnTextActive: { color: Colors.primary },
+  filterDropdown: {
+    position: "absolute",
+    top: 52,
+    left: 0,
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    minWidth: 150,
     zIndex: 30,
     shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowRadius: 12,
+    elevation: 8,
     overflow: "hidden",
   },
   filterOption: {
     paddingHorizontal: 16,
-    paddingVertical: 11,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
   filterOptionSelected: { backgroundColor: Colors.primaryLight },
+  filterOptionTextActive: { fontFamily: "Alex_700", color: Colors.primary },
   filterOptionText: {
     fontFamily: "Alex_400",
     fontSize: 13,
@@ -395,7 +418,11 @@ const styles = StyleSheet.create({
 
   /* Empty */
   empty: { alignItems: "center", paddingVertical: 60, gap: 10 },
-  emptyTitle: { fontSize: 16, fontFamily: "Alex_600", color: Colors.textSecondary },
+  emptyTitle: {
+    fontSize: 16,
+    fontFamily: "Alex_600",
+    color: Colors.textSecondary,
+  },
   emptySub: {
     fontSize: 13,
     fontFamily: "Alex_400",
