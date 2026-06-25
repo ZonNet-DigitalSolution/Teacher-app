@@ -2,7 +2,7 @@ import { Colors } from "@/constants/colors";
 import { communityService } from "@/store/community/communityService";
 import * as DocumentPicker from "expo-document-picker";
 import { Camera, Save, Users } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   saveBtnDisabled: { opacity: 0.6 },
   saveBtnText: {
     fontFamily: "Alex_700",
-    fontSize: 16,
+    fontSize: 12,
     color: "#fff",
   },
 });

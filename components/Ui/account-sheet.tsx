@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/colors";
 import { Maximize2, Pencil, Play, Settings2 } from "lucide-react-native";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.88;
@@ -51,8 +52,9 @@ function buildInfoRows(d: AccountData) {
 }
 
 export function AccountSheet({ visible, data, onClose, onEdit }: Props) {
+  const { bottom } = useSafeAreaInsets();
   const [bioExpanded, setBioExpanded] = useState(false);
-  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+  const translateY = useMemo(() => new Animated.Value(SHEET_HEIGHT), []);
 
   const infoRows = useMemo(() => buildInfoRows(data), [data]);
 
@@ -62,7 +64,7 @@ export function AccountSheet({ visible, data, onClose, onEdit }: Props) {
       duration: visible ? 300 : 240,
       useNativeDriver: true,
     }).start();
-  }, [visible]);
+  }, [visible, translateY]);
 
   const bioText = data.bio;
   const bioShort = bioText.length > 120 ? bioText.slice(0, 120) : bioText;
@@ -87,7 +89,7 @@ export function AccountSheet({ visible, data, onClose, onEdit }: Props) {
 
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[styles.content, { paddingBottom: bottom + 16 }]}
           >
             {/* ── نبذة تعريفية ── */}
             <Text style={styles.sectionTitle}>نبذة تعريفية</Text>
@@ -145,7 +147,6 @@ export function AccountSheet({ visible, data, onClose, onEdit }: Props) {
               <Pencil size={18} color="#fff" />
             </TouchableOpacity>
 
-            <View style={{ height: 16 }} />
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
   },
   editBtnText: {
     fontFamily: "Alex_700",
-    fontSize: 16,
+    fontSize: 12,
     color: "#fff",
   },
 });

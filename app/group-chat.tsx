@@ -47,7 +47,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
 const MEMBER_COLORS = ["#F29A52", "#4FC3C3", "#7B9FE0", "#E06B8B"];
@@ -184,6 +184,7 @@ function MembersSheet({
   loading: boolean;
   onClose: () => void;
 }) {
+  const { bottom } = useSafeAreaInsets();
   const translateY = useMemo(() => new Animated.Value(500), []);
 
   useEffect(() => {
@@ -223,7 +224,7 @@ function MembersSheet({
           <FlatList
             data={members}
             keyExtractor={(m) => String(m.id)}
-            contentContainerStyle={{ paddingBottom: 32, paddingHorizontal: 16 }}
+            contentContainerStyle={{ paddingBottom: 32 + bottom, paddingHorizontal: 16 }}
             showsVerticalScrollIndicator={false}
             ItemSeparatorComponent={() => <View style={styles.memberSep} />}
             ListEmptyComponent={
@@ -278,6 +279,7 @@ export default function GroupChatScreen() {
     [messagesByGroup, groupId],
   );
 
+  const { bottom: safeBottom } = useSafeAreaInsets();
   const { image: SubjectIcon, bgColor } = getPackageStyle(name ?? "");
   const [input, setInput] = useState("");
   const [showEmojis, setShowEmojis] = useState(false);
@@ -515,6 +517,7 @@ export default function GroupChatScreen() {
         )}
 
         {/* ── Input bar ── */}
+        <View style={{ paddingBottom: safeBottom }}>
         <View style={styles.inputBar}>
           <TouchableOpacity
             style={[
@@ -560,6 +563,7 @@ export default function GroupChatScreen() {
               color={sending ? Colors.borderLight : Colors.textSecondary}
             />
           </TouchableOpacity>
+        </View>
         </View>
       </KeyboardAvoidingView>
 

@@ -3,7 +3,7 @@ import { API_ENDPOINTS } from "@/constants/endpoints";
 import { api, normalizeError } from "@/services/api";
 import { Package } from "@/types/group.types";
 import { CheckCircle, ChevronDown, Plus, X } from "lucide-react-native";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -19,14 +19,26 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.85;
 
 const TIMES = [
-  "08:00", "09:00", "10:00", "11:00", "12:00",
-  "13:00", "14:00", "15:00", "16:00", "17:00",
-  "18:00", "19:00", "20:00", "21:00",
+  "08:00",
+  "09:00",
+  "10:00",
+  "11:00",
+  "12:00",
+  "13:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
+  "18:00",
+  "19:00",
+  "20:00",
+  "21:00",
 ];
 
 type Props = {
@@ -36,7 +48,10 @@ type Props = {
 };
 
 export function AddGroupSheet({ visible, onClose, onCreated }: Props) {
-  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+  "use no memo";
+
+  const { bottom } = useSafeAreaInsets();
+  const translateY = useMemo(() => new Animated.Value(SHEET_HEIGHT), []);
 
   const [groupName, setGroupName] = useState("");
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
@@ -56,35 +71,44 @@ export function AddGroupSheet({ visible, onClose, onCreated }: Props) {
       toValue: visible ? 0 : SHEET_HEIGHT,
       duration: visible ? 300 : 240,
       useNativeDriver: true,
-    }).start();
-    if (!visible) {
-      setGroupName("");
-      setSelectedPackage(null);
-      setSelectedTimes([]);
-      setPackageOpen(false);
-      setTimeOpen(false);
-      setError(null);
-      setSuccess(false);
-    }
-  }, [visible]);
-
-  const fetchPackages = useCallback(async () => {
-    if (packages.length > 0) return;
-    try {
-      setPkgLoading(true);
-      const { data } = await api.get<{ data: any[] }>(API_ENDPOINTS.PACKAGES.LIST);
-      const list = data.data ?? (data as any);
-      setPackages(Array.isArray(list) ? list : []);
-    } catch {
-      // silently fail — user can still type
-    } finally {
-      setPkgLoading(false);
-    }
-  }, [packages.length]);
+    }).start(({ finished }) => {
+      if (finished && !visible) {
+        setGroupName("");
+        setSelectedPackage(null);
+        setSelectedTimes([]);
+        setPackageOpen(false);
+        setTimeOpen(false);
+        setError(null);
+        setSuccess(false);
+      }
+    });
+  }, [visible, translateY]);
 
   useEffect(() => {
-    if (visible) fetchPackages();
-  }, [visible, fetchPackages]);
+    if (!visible || packages.length > 0) return;
+    let cancelled = false;
+    async function load() {
+      await Promise.resolve();
+      if (cancelled) return;
+      setPkgLoading(true);
+      try {
+        const { data } = await api.get<{ data: any[] }>(
+          API_ENDPOINTS.PACKAGES.LIST,
+        );
+        if (!cancelled) {
+          const list = data.data ?? (data as any);
+          setPackages(Array.isArray(list) ? list : []);
+        }
+      } catch {
+      } finally {
+        if (!cancelled) setPkgLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, packages.length]);
 
   function toggleTime(t: string) {
     setSelectedTimes((prev) =>
@@ -200,7 +224,12 @@ export function AddGroupSheet({ visible, onClose, onCreated }: Props) {
                 ))}
                 {packages.length === 0 && (
                   <View style={styles.dropdownOption}>
-                    <Text style={[styles.dropdownOptionText, { color: Colors.textTertiary }]}>
+                    <Text
+                      style={[
+                        styles.dropdownOptionText,
+                        { color: Colors.textTertiary },
+                      ]}
+                    >
                       لا توجد باقات
                     </Text>
                   </View>
@@ -243,7 +272,8 @@ export function AddGroupSheet({ visible, onClose, onCreated }: Props) {
                     key={t}
                     style={[
                       styles.dropdownOption,
-                      selectedTimes.includes(t) && styles.dropdownOptionSelected,
+                      selectedTimes.includes(t) &&
+                        styles.dropdownOptionSelected,
                     ]}
                     onPress={() => toggleTime(t)}
                   >
@@ -273,9 +303,12 @@ export function AddGroupSheet({ visible, onClose, onCreated }: Props) {
           </ScrollView>
 
           {/* Footer */}
-          <View style={styles.footer}>
+          <View style={[styles.footer, { paddingBottom: bottom + 16 }]}>
             <TouchableOpacity
-              style={[styles.submitBtn, (!isValid || submitting) && styles.submitBtnDim]}
+              style={[
+                styles.submitBtn,
+                (!isValid || submitting) && styles.submitBtnDim,
+              ]}
               activeOpacity={0.85}
               onPress={handleSubmit}
               disabled={!isValid || submitting}
@@ -454,5 +487,5 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   submitBtnDim: { backgroundColor: Colors.textTertiary },
-  submitBtnText: { fontSize: 15, fontFamily: "Alex_700", color: "#fff" },
+  submitBtnText: { fontSize: 12, fontFamily: "Alex_700", color: "#fff" },
 });

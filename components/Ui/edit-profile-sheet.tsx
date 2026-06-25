@@ -2,8 +2,8 @@ import { Colors } from "@/constants/colors";
 import { AppDispatch } from "@/store";
 import { updateProfileData, updateProfileImage } from "@/store/teacher";
 import * as DocumentPicker from "expo-document-picker";
-import { Camera, Save } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import { Camera, Save, X } from "lucide-react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -20,6 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -58,8 +59,11 @@ const FIELDS: Field[] = [
 ];
 
 export function EditProfileSheet({ visible, data, onClose }: Props) {
+  "use no memo";
+
   const dispatch = useDispatch<AppDispatch>();
-  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+  const { bottom } = useSafeAreaInsets();
+  const translateY = useMemo(() => new Animated.Value(SHEET_HEIGHT), []);
   const original = useRef<Omit<EditProfileData, "profileImage">>(data);
 
   const [form, setForm] = useState<Omit<EditProfileData, "profileImage">>({
@@ -78,20 +82,21 @@ export function EditProfileSheet({ visible, data, onClose }: Props) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (visible) {
-      const snapshot = {
-        name: data.name,
-        nameEn: data.nameEn,
-        email: data.email,
-        country: data.country,
-        bio: data.bio,
-        workType: data.workType,
-      };
-      original.current = snapshot;
+    if (!visible) return;
+    const snapshot = {
+      name: data.name,
+      nameEn: data.nameEn,
+      email: data.email,
+      country: data.country,
+      bio: data.bio,
+      workType: data.workType,
+    };
+    original.current = snapshot;
+    Promise.resolve().then(() => {
       setForm(snapshot);
       setLocalImage(data.profileImage);
       setImageChanged(false);
-    }
+    });
   }, [visible, data]);
 
   useEffect(() => {
@@ -100,7 +105,7 @@ export function EditProfileSheet({ visible, data, onClose }: Props) {
       duration: visible ? 300 : 240,
       useNativeDriver: true,
     }).start();
-  }, [visible]);
+  }, [visible, translateY]);
 
   const pickImage = async () => {
     const result = await DocumentPicker.getDocumentAsync({
@@ -158,13 +163,22 @@ export function EditProfileSheet({ visible, data, onClose }: Props) {
         <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
           <View style={styles.handle} />
 
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+              <X size={18} color={Colors.textSecondary} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>تعديل الملف الشخصي</Text>
+            <View style={{ width: 36 }} />
+          </View>
+
+          <View style={styles.dashedDivider} />
+
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[styles.content, { paddingBottom: bottom + 24 }]}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.title}>تعديل الملف الشخصي</Text>
-
             {/* Avatar picker */}
             <TouchableOpacity
               style={styles.avatarWrap}
@@ -221,7 +235,6 @@ export function EditProfileSheet({ visible, data, onClose }: Props) {
               )}
             </TouchableOpacity>
 
-            <View style={{ height: 24 }} />
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -248,19 +261,36 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: "#E0E0E0",
     alignSelf: "center",
-    marginBottom: 8,
+    marginBottom: 10,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  headerTitle: { fontSize: 16, fontFamily: "Alex_700", color: "#165072" },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dashedDivider: {
+    borderBottomWidth: 1.5,
+    borderColor: "#165072",
+    borderStyle: "dashed",
+    marginHorizontal: 16,
+    marginBottom: 20,
   },
   content: {
     paddingHorizontal: 20,
     paddingTop: 8,
     alignItems: "stretch",
-  },
-  title: {
-    fontFamily: "Alex_700",
-    fontSize: 18,
-    color: Colors.textPrimary,
-    textAlign: "center",
-    marginBottom: 20,
   },
   avatarWrap: {
     alignSelf: "center",
