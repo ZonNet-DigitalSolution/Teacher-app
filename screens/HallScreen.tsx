@@ -1,4 +1,4 @@
-import { AddHallSheet } from "@/components/Hall/AddHallSheet";
+import { AddHallSheet } from "@/components/Ui/add-hall-sheet";
 import { Hall } from "@/types/hall.types";
 import { HallCard } from "@/components/Hall/HallCard";
 import { NavHeader } from "@/components/Ui/NavHeader";

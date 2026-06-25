@@ -47,7 +47,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
 const MEMBER_COLORS = ["#F29A52", "#4FC3C3", "#7B9FE0", "#E06B8B"];
@@ -122,7 +125,11 @@ type DisplayMsg =
   | { kind: "date"; id: string; label: string }
   | { kind: "msg"; id: string; msg: ChatMessage; isOwn: boolean };
 
-const MessageItem = React.memo(function MessageItem({ item }: { item: DisplayMsg }) {
+const MessageItem = React.memo(function MessageItem({
+  item,
+}: {
+  item: DisplayMsg;
+}) {
   if (item.kind === "date") {
     return (
       <View style={styles.dateChipWrap}>
@@ -224,7 +231,10 @@ function MembersSheet({
           <FlatList
             data={members}
             keyExtractor={(m) => String(m.id)}
-            contentContainerStyle={{ paddingBottom: 32 + bottom, paddingHorizontal: 16 }}
+            contentContainerStyle={{
+              paddingBottom: 32 + bottom,
+              paddingHorizontal: 16,
+            }}
             showsVerticalScrollIndicator={false}
             ItemSeparatorComponent={() => <View style={styles.memberSep} />}
             ListEmptyComponent={
@@ -476,7 +486,7 @@ export default function GroupChatScreen() {
       {/* ── Messages ── */}
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
         {messagesLoading && rawMessages.length === 0 ? (
@@ -497,6 +507,9 @@ export default function GroupChatScreen() {
             removeClippedSubviews
             updateCellsBatchingPeriod={50}
             maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+            onContentSizeChange={() =>
+              listRef.current?.scrollToEnd({ animated: true })
+            }
           />
         )}
 
@@ -518,52 +531,52 @@ export default function GroupChatScreen() {
 
         {/* ── Input bar ── */}
         <View style={{ paddingBottom: safeBottom }}>
-        <View style={styles.inputBar}>
-          <TouchableOpacity
-            style={[
-              styles.sendBtn,
-              (!input.trim() || sending) && styles.sendBtnDisabled,
-            ]}
-            onPress={handleSend}
-            disabled={!input.trim() || sending}
-          >
-            {sending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Send size={20} color="#fff" />
-            )}
-          </TouchableOpacity>
+          <View style={styles.inputBar}>
+            <TouchableOpacity
+              style={[
+                styles.sendBtn,
+                (!input.trim() || sending) && styles.sendBtnDisabled,
+              ]}
+              onPress={handleSend}
+              disabled={!input.trim() || sending}
+            >
+              {sending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Send size={20} color="#fff" />
+              )}
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.emojiBtn, showEmojis && styles.emojiBtnActive]}
-            onPress={() => setShowEmojis((v) => !v)}
-          >
-            <Smile
-              size={20}
-              color={showEmojis ? Colors.primary : Colors.textSecondary}
+            <TouchableOpacity
+              style={[styles.emojiBtn, showEmojis && styles.emojiBtnActive]}
+              onPress={() => setShowEmojis((v) => !v)}
+            >
+              <Smile
+                size={20}
+                color={showEmojis ? Colors.primary : Colors.textSecondary}
+              />
+            </TouchableOpacity>
+
+            <TextInput
+              ref={inputRef}
+              style={styles.textInput}
+              value={input}
+              onChangeText={setInput}
+              placeholder="اكتب اي حاجه محتاجها"
+              placeholderTextColor={Colors.textPlaceholder}
+              textAlign="right"
+              onSubmitEditing={handleSend}
+              returnKeyType="send"
+              onFocus={() => setShowEmojis(false)}
             />
-          </TouchableOpacity>
 
-          <TextInput
-            ref={inputRef}
-            style={styles.textInput}
-            value={input}
-            onChangeText={setInput}
-            placeholder="اكتب اي حاجه محتاجها"
-            placeholderTextColor={Colors.textPlaceholder}
-            textAlign="right"
-            onSubmitEditing={handleSend}
-            returnKeyType="send"
-            onFocus={() => setShowEmojis(false)}
-          />
-
-          <TouchableOpacity onPress={handleFilePick} disabled={sending}>
-            <Paperclip
-              size={20}
-              color={sending ? Colors.borderLight : Colors.textSecondary}
-            />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity onPress={handleFilePick} disabled={sending}>
+              <Paperclip
+                size={20}
+                color={sending ? Colors.borderLight : Colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
 

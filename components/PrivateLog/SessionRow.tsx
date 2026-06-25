@@ -1,6 +1,4 @@
-import RiyalIcon from "@/assets/svg/Riyal.svg";
 import { Colors } from "@/constants/colors";
-import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { RatingStars } from "./RatingStars";
 import { StatusBadge } from "./StatusBadge";
@@ -38,7 +36,6 @@ export function SessionRow({ item }: { item: LogSession }) {
           </Text>
           <View style={styles.priceRow}>
             <Text style={styles.rowPrice}>{item.price}</Text>
-            <RiyalIcon width={16} height={16} color={Colors.success} />
           </View>
         </View>
       </View>

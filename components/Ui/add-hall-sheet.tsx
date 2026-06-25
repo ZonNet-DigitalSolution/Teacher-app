@@ -1,7 +1,7 @@
 import { Colors } from "@/constants/colors";
 import { Hall, ROOM_TYPES } from "@/types/hall.types";
 import { Check, ChevronDown, X } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.62;
@@ -29,7 +30,10 @@ type Props = {
 };
 
 export function AddHallSheet({ visible, editItem, onClose, onAdd, onUpdate }: Props) {
-  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+  "use no memo";
+
+  const { bottom } = useSafeAreaInsets();
+  const translateY = useMemo(() => new Animated.Value(SHEET_HEIGHT), []);
   const [type, setType] = useState("");
   const [link, setLink] = useState("");
   const [typePickerOpen, setTypePickerOpen] = useState(false);
@@ -41,17 +45,17 @@ export function AddHallSheet({ visible, editItem, onClose, onAdd, onUpdate }: Pr
       toValue: visible ? 0 : SHEET_HEIGHT,
       duration: visible ? 300 : 240,
       useNativeDriver: true,
-    }).start();
-
-    if (visible && editItem) {
-      setType(editItem.type);
-      setLink(editItem.link);
-    } else if (!visible) {
-      setType("");
-      setLink("");
-      setTypePickerOpen(false);
-    }
-  }, [visible, editItem]);
+    }).start(({ finished }) => {
+      if (visible && editItem) {
+        setType(editItem.type);
+        setLink(editItem.link);
+      } else if (finished && !visible) {
+        setType("");
+        setLink("");
+        setTypePickerOpen(false);
+      }
+    });
+  }, [visible, editItem, translateY]);
 
   function handleSubmit() {
     if (!type.trim() || !link.trim()) return;
@@ -161,7 +165,7 @@ export function AddHallSheet({ visible, editItem, onClose, onAdd, onUpdate }: Pr
           </ScrollView>
 
           {/* Footer */}
-          <View style={styles.footer}>
+          <View style={[styles.footer, { paddingBottom: bottom + 16 }]}>
             <TouchableOpacity
               style={[
                 styles.addBtn,
@@ -192,6 +196,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 16,
     height: SHEET_HEIGHT,
     paddingTop: 12,
   },

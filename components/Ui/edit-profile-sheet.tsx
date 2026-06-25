@@ -3,7 +3,7 @@ import { AppDispatch } from "@/store";
 import { updateProfileData, updateProfileImage } from "@/store/teacher";
 import * as DocumentPicker from "expo-document-picker";
 import { Camera, Save, X } from "lucide-react-native";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -176,7 +176,10 @@ export function EditProfileSheet({ visible, data, onClose }: Props) {
 
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={[styles.content, { paddingBottom: bottom + 24 }]}
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: bottom + 24 },
+            ]}
             keyboardShouldPersistTaps="handled"
           >
             {/* Avatar picker */}
@@ -234,7 +237,6 @@ export function EditProfileSheet({ visible, data, onClose }: Props) {
                 </>
               )}
             </TouchableOpacity>
-
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -252,6 +254,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 16,
     height: SHEET_HEIGHT,
     paddingTop: 12,
   },
@@ -358,7 +365,7 @@ const styles = StyleSheet.create({
   saveBtnDisabled: { opacity: 0.6 },
   saveBtnText: {
     fontFamily: "Alex_700",
-    fontSize: 16,
+    fontSize: 12,
     color: "#fff",
   },
 });

@@ -3,7 +3,7 @@ import { API_ENDPOINTS } from "@/constants/endpoints";
 import { api, normalizeError } from "@/services/api";
 import { Group, Student } from "@/types/group.types";
 import { CheckCircle, Save, Search, X } from "lucide-react-native";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.85;
@@ -104,7 +105,9 @@ type Props = {
 };
 
 export function StudentListSheet({ visible, group, onClose }: Props) {
-  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+  "use no memo";
+  const { bottom } = useSafeAreaInsets();
+  const translateY = useMemo(() => new Animated.Value(SHEET_HEIGHT), []);
   const [search, setSearch] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
   const [reviews, setReviews] = useState<Record<number, StudentReview>>({});
@@ -118,42 +121,46 @@ export function StudentListSheet({ visible, group, onClose }: Props) {
       toValue: visible ? 0 : SHEET_HEIGHT,
       duration: visible ? 300 : 240,
       useNativeDriver: true,
-    }).start();
-    if (!visible) {
-      setSearch("");
-      setStudents([]);
-      setReviews({});
-      setError(null);
-      setSaved(false);
-    }
-  }, [visible]);
-
-  const fetchStudents = useCallback(async () => {
-    if (!group) return;
-    try {
-      setLoading(true);
-      setError(null);
-      const { data } = await api.get<{ data: any[] }>(
-        `${API_ENDPOINTS.GROUPS.STUDENTS}${group.id}/students`,
-      );
-      const list = data.data ?? (data as any);
-      const arr: Student[] = Array.isArray(list) ? list : [];
-      setStudents(arr);
-      const initial: Record<number, StudentReview> = {};
-      arr.forEach((s) => {
-        initial[s.id] = { grade: GRADE_OPTIONS[0], comment: "" };
-      });
-      setReviews(initial);
-    } catch (err) {
-      setError(normalizeError(err));
-    } finally {
-      setLoading(false);
-    }
-  }, [group]);
+    }).start(({ finished }) => {
+      if (finished && !visible) {
+        setSearch("");
+        setStudents([]);
+        setReviews({});
+        setError(null);
+        setSaved(false);
+      }
+    });
+  }, [visible, translateY]);
 
   useEffect(() => {
-    if (visible && group) fetchStudents();
-  }, [visible, group, fetchStudents]);
+    if (!visible || !group) return;
+    let cancelled = false;
+    async function load() {
+      await Promise.resolve();
+      if (cancelled) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const { data } = await api.get<{ data: any[] }>(
+          `${API_ENDPOINTS.GROUPS.STUDENTS}${group.id}/students`,
+        );
+        if (!cancelled) {
+          const list = data.data ?? (data as any);
+          const arr: Student[] = Array.isArray(list) ? list : [];
+          setStudents(arr);
+          const initial: Record<number, StudentReview> = {};
+          arr.forEach((s) => { initial[s.id] = { grade: GRADE_OPTIONS[0], comment: "" }; });
+          setReviews(initial);
+        }
+      } catch (err) {
+        if (!cancelled) setError(normalizeError(err));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [visible, group]);
 
   async function handleSave() {
     if (!group || students.length === 0) return;
@@ -230,9 +237,6 @@ export function StudentListSheet({ visible, group, onClose }: Props) {
           ) : error ? (
             <View style={styles.center}>
               <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity onPress={fetchStudents} style={styles.retryBtn}>
-                <Text style={styles.retryText}>إعادة المحاولة</Text>
-              </TouchableOpacity>
             </View>
           ) : (
             <FlatList
@@ -258,7 +262,7 @@ export function StudentListSheet({ visible, group, onClose }: Props) {
 
           {/* Footer */}
           {group?.is_review && (
-            <View style={styles.footer}>
+            <View style={[styles.footer, { paddingBottom: bottom + 16 }]}>
               {saved ? (
                 <View style={styles.savedRow}>
                   <CheckCircle size={18} color={Colors.success} />
@@ -300,6 +304,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 16,
     height: SHEET_HEIGHT,
     paddingTop: 12,
   },

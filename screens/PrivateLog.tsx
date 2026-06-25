@@ -1,8 +1,12 @@
 import { SessionRow } from "@/components/PrivateLog/SessionRow";
-import { FILTER_TABS, LogSession, SessionStatus } from "@/components/PrivateLog/Types";
+import {
+  FILTER_TABS,
+  LogSession,
+  SessionStatus,
+} from "@/components/PrivateLog/Types";
 import { Colors } from "@/constants/colors";
 import { BookOpen, Search, X } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -48,29 +52,35 @@ export function PrivateLog({ sessions = [] }: { sessions?: LogSession[] }) {
         <Search size={17} color={Colors.textTertiary} />
       </View>
 
-      {/* Filter chips */}
-      <FlatList
-        data={FILTER_TABS}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(t) => t.id}
-        contentContainerStyle={styles.filterContent}
-        style={styles.filterList}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.filterChip, filter === item.id && styles.filterChipActive]}
-            onPress={() => setFilter(item.id)}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.filterChipText, filter === item.id && styles.filterChipTextActive]}>
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
-
-      {/* Results count */}
-      <View style={styles.countRow}>
+      {/* Filter chips + count on same row */}
+      <View style={styles.filterRow}>
+        <FlatList
+          data={FILTER_TABS}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(t) => t.id}
+          contentContainerStyle={styles.filterContent}
+          style={styles.filterList}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[
+                styles.filterChip,
+                filter === item.id && styles.filterChipActive,
+              ]}
+              onPress={() => setFilter(item.id)}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  filter === item.id && styles.filterChipTextActive,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
         <Text style={styles.countText}>{filtered.length} جلسة</Text>
       </View>
 
@@ -81,7 +91,6 @@ export function PrivateLog({ sessions = [] }: { sessions?: LogSession[] }) {
         renderItem={({ item }) => <SessionRow item={item} />}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <BookOpen size={44} color={Colors.textTertiary} />
@@ -100,34 +109,74 @@ export function PrivateLog({ sessions = [] }: { sessions?: LogSession[] }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   searchRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 10,
     marginHorizontal: 16,
     marginTop: 14,
     marginBottom: 10,
-    backgroundColor: Colors.surfaceAlt,
-    borderRadius: 12,
+    backgroundColor: "#fff",
+    borderRadius: 14,
     paddingHorizontal: 14,
-    height: 46,
+    height: 50,
     borderWidth: 1,
     borderColor: Colors.borderLight,
   },
-  searchInput: { flex: 1, fontSize: 14, fontFamily: "Alex_400", color: Colors.textPrimary },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "Alex_400",
+    color: Colors.textPrimary,
+  },
   clearBtn: { padding: 2 },
   hidden: { opacity: 0 },
-  filterList: { flexGrow: 0, marginBottom: 4 },
-  filterContent: { flexDirection: "row-reverse", paddingHorizontal: 16, gap: 8, paddingVertical: 4 },
-  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.borderLight },
-  filterChipActive: { backgroundColor: Colors.primaryLight, borderColor: Colors.primary },
-  filterChipText: { fontSize: 13, fontFamily: "Alex_400", color: Colors.textSecondary },
-  filterChipTextActive: { fontFamily: "Alex_600", color: Colors.primary },
-  countRow: { paddingHorizontal: 16, paddingBottom: 8, alignItems: "flex-end" },
-  countText: { fontSize: 12, fontFamily: "Alex_400", color: Colors.textTertiary },
-  listContent: { paddingHorizontal: 16 },
-  separator: { height: 1, backgroundColor: Colors.borderLight, marginHorizontal: 4 },
+  filterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingRight: 16,
+    marginBottom: 10,
+  },
+  countText: {
+    fontSize: 12,
+    fontFamily: "Alex_600",
+    color: Colors.textTertiary,
+    minWidth: 44,
+  },
+  filterList: { flex: 1, flexGrow: 1 },
+  filterContent: {
+    flexDirection: "row-reverse",
+    paddingHorizontal: 10,
+    gap: 8,
+    paddingVertical: 2,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  filterChipActive: {
+    backgroundColor: Colors.primaryLight,
+    borderColor: Colors.primary,
+  },
+  filterChipText: {
+    fontSize: 12,
+    fontFamily: "Alex_400",
+    color: Colors.textSecondary,
+  },
+  filterChipTextActive: { fontFamily: "Alex_700", color: Colors.primary },
+  listContent: { paddingHorizontal: 16, gap: 10 },
   emptyState: { alignItems: "center", paddingVertical: 60, gap: 8 },
-  emptyTitle: { fontSize: 15, fontFamily: "Alex_600", color: Colors.textSecondary },
-  emptyHint: { fontSize: 13, fontFamily: "Alex_400", color: Colors.textTertiary },
+  emptyTitle: {
+    fontSize: 15,
+    fontFamily: "Alex_600",
+    color: Colors.textSecondary,
+  },
+  emptyHint: {
+    fontSize: 13,
+    fontFamily: "Alex_400",
+    color: Colors.textTertiary,
+  },
   footer: { height: 100 },
 });

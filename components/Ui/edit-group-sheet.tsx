@@ -1,8 +1,8 @@
 import { Colors } from "@/constants/colors";
 import { communityService } from "@/store/community/communityService";
 import * as DocumentPicker from "expo-document-picker";
-import { Camera, Save, Users } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
+import { Camera, Save, Users, X } from "lucide-react-native";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -21,6 +21,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height: SCREEN_H } = Dimensions.get("window");
 const SHEET_H = SCREEN_H * 0.88;
@@ -40,7 +41,9 @@ export function EditGroupSheet({
   onClose,
   onSuccess,
 }: Props) {
-  const translateY = useRef(new Animated.Value(SHEET_H)).current;
+  "use no memo";
+  const { bottom } = useSafeAreaInsets();
+  const translateY = useMemo(() => new Animated.Value(SHEET_H), []);
 
   const [name, setName] = useState(groupName);
   const [details, setDetails] = useState("");
@@ -49,23 +52,20 @@ export function EditGroupSheet({
   const [avatarName, setAvatarName] = useState("avatar.jpg");
   const [saving, setSaving] = useState(false);
 
-  // Reset form when sheet opens
-  useEffect(() => {
-    if (visible) {
-      setName(groupName);
-      setDetails("");
-      setIsReview(false);
-      setAvatarUri(null);
-    }
-  }, [visible, groupName]);
-
   useEffect(() => {
     Animated.timing(translateY, {
       toValue: visible ? 0 : SHEET_H,
       duration: visible ? 300 : 240,
       useNativeDriver: true,
-    }).start();
-  }, [visible, translateY]);
+    }).start(({ finished }) => {
+      if (finished && !visible) {
+        setName(groupName);
+        setDetails("");
+        setIsReview(false);
+        setAvatarUri(null);
+      }
+    });
+  }, [visible, translateY, groupName]);
 
   const pickAvatar = async () => {
     const result = await DocumentPicker.getDocumentAsync({
@@ -120,15 +120,13 @@ export function EditGroupSheet({
 
           {/* ── Header ── */}
           <View style={styles.header}>
-            <TouchableOpacity
-              onPress={onClose}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Text style={styles.cancelText}>إلغاء</Text>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+              <X size={18} color={Colors.textSecondary} />
             </TouchableOpacity>
-            <Text style={styles.title}>تعديل المجموعة</Text>
-            <View style={{ width: 44 }} />
+            <Text style={styles.headerTitle}>تعديل المجموعة</Text>
+            <View style={{ width: 36 }} />
           </View>
+          <View style={styles.dashedDivider} />
 
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -202,8 +200,10 @@ export function EditGroupSheet({
                 </Text>
               </View>
             </View>
+          </ScrollView>
 
-            {/* ── Save button ── */}
+          {/* ── Footer / Save button ── */}
+          <View style={[styles.footer, { paddingBottom: bottom + 16 }]}>
             <TouchableOpacity
               style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
               onPress={handleSave}
@@ -219,9 +219,7 @@ export function EditGroupSheet({
                 </>
               )}
             </TouchableOpacity>
-
-            <View style={{ height: 24 }} />
-          </ScrollView>
+          </View>
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
@@ -238,6 +236,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 16,
     height: SHEET_H,
     paddingTop: 12,
   },
@@ -247,7 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: "#E0E0E0",
     alignSelf: "center",
-    marginBottom: 4,
+    marginBottom: 10,
   },
 
   // ── Header ────────────────────────────────────────────
@@ -255,20 +258,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    paddingHorizontal: 16,
+    marginBottom: 12,
   },
-  title: {
-    fontFamily: "Alex_700",
-    fontSize: 16,
-    color: Colors.textPrimary,
+  headerTitle: { fontSize: 16, fontFamily: "Alex_700", color: "#165072" },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  cancelText: {
-    fontFamily: "Alex_500",
-    fontSize: 14,
-    color: Colors.textSecondary,
+  dashedDivider: {
+    borderBottomWidth: 1.5,
+    borderColor: "#165072",
+    borderStyle: "dashed",
+    marginHorizontal: 16,
+    marginBottom: 20,
   },
 
   // ── Content ───────────────────────────────────────────
@@ -366,6 +374,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     textAlign: "right",
+  },
+
+  // ── Footer ────────────────────────────────────────────
+  footer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
   },
 
   // ── Save button ───────────────────────────────────────

@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/colors";
-import { Maximize2, Pencil, Play, Settings2 } from "lucide-react-native";
+import { Maximize2, Pencil, Play, Settings2, X } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
 import {
   Animated,
@@ -52,6 +52,8 @@ function buildInfoRows(d: AccountData) {
 }
 
 export function AccountSheet({ visible, data, onClose, onEdit }: Props) {
+  "use no memo";
+
   const { bottom } = useSafeAreaInsets();
   const [bioExpanded, setBioExpanded] = useState(false);
   const translateY = useMemo(() => new Animated.Value(SHEET_HEIGHT), []);
@@ -84,8 +86,18 @@ export function AccountSheet({ visible, data, onClose, onEdit }: Props) {
         <Pressable style={styles.backdrop} onPress={onClose} />
 
         <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
-          {/* Handle */}
           <View style={styles.handle} />
+
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+              <X size={18} color={Colors.textSecondary} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>الملف الشخصي</Text>
+            <View style={{ width: 36 }} />
+          </View>
+
+          <View style={styles.dashedDivider} />
 
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -167,6 +179,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 16,
     height: SHEET_HEIGHT,
     paddingTop: 12,
   },
@@ -176,7 +193,31 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: "#E0E0E0",
     alignSelf: "center",
-    marginBottom: 8,
+    marginBottom: 10,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  headerTitle: { fontSize: 16, fontFamily: "Alex_700", color: "#165072" },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dashedDivider: {
+    borderBottomWidth: 1.5,
+    borderColor: "#165072",
+    borderStyle: "dashed",
+    marginHorizontal: 16,
+    marginBottom: 20,
   },
   content: {
     paddingHorizontal: 20,

@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { Pencil } from "lucide-react-native";
 import { memo, useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { EditLessonSheet } from "./EditLessonSheet";
+import { EditLessonSheet } from "@/components/Ui/edit-lesson-sheet";
 import { BellBadgeIcon, DoneBadgeIcon, UpcomingBadgeIcon } from "./icons";
 
 type Props = { lesson: Lesson };

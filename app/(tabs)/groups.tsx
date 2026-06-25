@@ -1,6 +1,6 @@
 import GroupIcon from "@/assets/svg/Group.svg";
-import { AddGroupSheet } from "@/components/Groups/AddGroupSheet";
-import { StudentListSheet } from "@/components/Groups/StudentListSheet";
+import { AddGroupSheet } from "@/components/Ui/add-group-sheet";
+import { StudentListSheet } from "@/components/Ui/student-list-sheet";
 import { ScreenHeader } from "@/components/Ui/screen-header";
 import { Colors } from "@/constants/colors";
 import { API_ENDPOINTS } from "@/constants/endpoints";

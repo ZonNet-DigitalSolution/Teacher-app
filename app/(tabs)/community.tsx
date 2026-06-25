@@ -6,7 +6,7 @@ import type { ChatGroup } from "@/store/community/communityService";
 import { clearCommunityBadge } from "@/store/navigation";
 import { getPackageStyle } from "@/utils/package-factory";
 import { useRouter } from "expo-router";
-import { MessageSquare, Search, SlidersHorizontal } from "lucide-react-native";
+import { MessageSquare, Search, SlidersHorizontal, Users } from "lucide-react-native";
 import React, { memo, useCallback, useEffect, useMemo } from "react";
 import {
   ActivityIndicator,
@@ -21,7 +21,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
 // ── Group card ───────────────────────────────────────────────────────────────
-const MEMBER_COLORS = ["#F29A52", "#4FC3C3", "#7B9FE0", "#E06B8B"];
 
 const GroupCard = memo(function GroupCard({ item }: { item: ChatGroup }) {
   const router = useRouter();
@@ -61,21 +60,9 @@ const GroupCard = memo(function GroupCard({ item }: { item: ChatGroup }) {
           <Text style={styles.lastMessage} numberOfLines={1}>
             {lastMsg}
           </Text>
-          <View style={styles.membersRow}>
-            {MEMBER_COLORS.slice(0, Math.min(item.member_count, 4)).map(
-              (color, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.memberAvatar,
-                    { backgroundColor: color, marginRight: i === 0 ? 0 : 4 },
-                  ]}
-                />
-              ),
-            )}
-            {item.member_count > 4 && (
-              <Text style={styles.memberMore}>+{item.member_count - 4}</Text>
-            )}
+          <View style={styles.memberCountRow}>
+            <Text style={styles.memberCount}>{item.member_count} أعضاء</Text>
+            <Users size={13} color={Colors.textSecondary} />
           </View>
         </View>
 
@@ -258,23 +245,16 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: "right",
   },
-  membersRow: {
-    flexDirection: "row-reverse",
-    marginTop: 4,
+  memberCountRow: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 4,
+    marginTop: 4,
   },
-  memberAvatar: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: 1.5,
-    borderColor: "#FE8401",
-  },
-  memberMore: {
+  memberCount: {
     fontSize: 11,
     fontFamily: "Alex_600",
     color: Colors.textSecondary,
-    marginRight: 4,
   },
   groupImage: {
     width: 56,
