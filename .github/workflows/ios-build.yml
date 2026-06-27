@@ -10,50 +10,56 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Install Node
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
         run: npm install
 
-      - name: Prebuild iOS
-        run: npx expo prebuild --platform ios
+      - name: Expo Prebuild
+        run: npx expo prebuild --clean --platform ios
 
       - name: Install CocoaPods
         run: |
           cd ios
           pod install
 
-      - name: Get workspace and scheme
+      - name: Verify iOS workspace
         run: |
           ls ios
-          xcodebuild -list -workspace ios/*.xcworkspace
 
       - name: Build iOS Archive
         run: |
           cd ios
-          WORKSPACE=$(ls -d *.xcworkspace | head -1)
-          SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | awk '/Schemes:/{found=1; next} found && NF{print $1; exit}')
-          echo "Building scheme: $SCHEME"
+
+          WORKSPACE=$(find . -maxdepth 1 -name "*.xcworkspace" | head -n 1)
+
+          echo "Workspace: $WORKSPACE"
+
+          SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | awk '/Schemes:/{flag=1; next} flag && NF{print $1; exit}')
+
+          echo "Scheme: $SCHEME"
+
+          if [ -z "$WORKSPACE" ] || [ -z "$SCHEME" ]; then
+            echo "❌ Missing workspace or scheme"
+            exit 1
+          fi
+
           xcodebuild \
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
             -configuration Release \
-            -destination 'generic/platform=iOS' \
+            -destination "generic/platform=iOS" \
             -archivePath build/app.xcarchive \
-            CODE_SIGNING_ALLOWED=NO \
             archive
 
-      - name: Export IPA (optional)
-        run: |
-          cd ios
-          mkdir -p build
-
-      - name: Upload build artifact
+      - name: Upload iOS Archive
         uses: actions/upload-artifact@v4
         with:
           name: ios-build
