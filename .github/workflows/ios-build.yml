@@ -20,5 +20,29 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build check
-        run: echo "Workflow is running"
+      - name: Install Expo CLI
+        run: npm install -g expo-cli
+
+      - name: Prebuild iOS
+        run: npx expo prebuild --platform ios
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Build (Xcode)
+        run: |
+          cd ios
+          xcodebuild \
+            -workspace *.xcworkspace \
+            -scheme * \
+            -configuration Release \
+            -archivePath build/app.xcarchive \
+            archive
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: ios/build
