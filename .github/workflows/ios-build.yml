@@ -25,6 +25,13 @@ jobs:
       - name: Expo Prebuild
         run: npx expo prebuild --clean --platform ios
 
+      - name: Select Xcode version
+        run: |
+          ls /Applications | grep Xcode || true
+          sudo xcode-select -s /Applications/Xcode_16.5.app
+          xcodebuild -version
+          swift --version
+
       - name: Install CocoaPods
         run: |
           cd ios
