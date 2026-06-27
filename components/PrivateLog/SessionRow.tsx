@@ -1,118 +1,102 @@
+import TargetIcon from "@/assets/svg/Target.svg";
 import { Colors } from "@/constants/colors";
 import { StyleSheet, Text, View } from "react-native";
-import { RatingStars } from "./RatingStars";
 import { StatusBadge } from "./StatusBadge";
 import { LogSession } from "./Types";
 
 export function SessionRow({ item }: { item: LogSession }) {
   return (
-    <View style={styles.row}>
-      {/* Left: status + rating */}
-      <View style={styles.rowLeft}>
+    <View style={styles.card}>
+      {/* Top: avatar + name/duration + status badge */}
+      <View style={styles.topRow}>
         <StatusBadge status={item.status} />
-        {item.rating !== undefined && <RatingStars rating={item.rating} />}
-      </View>
 
-      {/* Center: subject + time/date */}
-      <View style={styles.rowCenter}>
-        <Text style={styles.rowSubject} numberOfLines={1}>
-          {item.subject}
-        </Text>
-        <View style={styles.rowTimeRow}>
-          <Text style={styles.rowDate}>{item.date}</Text>
-          <Text style={styles.rowDot}>·</Text>
-          <Text style={styles.rowTime}>{item.time}</Text>
-        </View>
-      </View>
-
-      {/* Right: avatar + name + price */}
-      <View style={styles.rowRight}>
-        <View style={styles.rowAvatar}>
-          <Text style={styles.rowAvatarText}>{item.student[0]}</Text>
-        </View>
-        <View style={styles.rowStudentInfo}>
-          <Text style={styles.rowName} numberOfLines={1}>
+        <View style={styles.studentBlock}>
+          <Text style={styles.name} numberOfLines={1}>
             {item.student}
           </Text>
-          <View style={styles.priceRow}>
-            <Text style={styles.rowPrice}>{item.price}</Text>
-          </View>
+          <Text style={styles.duration}>{item.price}</Text>
         </View>
+
+        <View style={styles.avatar}>
+          <Text style={styles.avatarLetter}>{item.student[0]}</Text>
+        </View>
+      </View>
+
+      <View style={styles.divider} />
+
+      {/* Bottom: subject + icon */}
+      <View style={styles.bottomRow}>
+        <Text style={styles.subject} numberOfLines={1}>
+          {item.subject}
+        </Text>
+        <TargetIcon width={22} height={22} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 12,
+  },
+  topRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 14,
     gap: 10,
   },
-  rowLeft: {
-    alignItems: "center",
-    gap: 6,
-    width: 62,
-  },
-  rowCenter: {
-    flex: 1,
-    alignItems: "flex-end",
-    gap: 4,
-  },
-  rowRight: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: 8,
-  },
-  rowAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: Colors.primaryLight,
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#1B4F72",
     alignItems: "center",
     justifyContent: "center",
   },
-  rowAvatarText: {
-    fontSize: 14,
+  avatarLetter: {
+    fontSize: 16,
     fontFamily: "Alex_700",
-    color: Colors.primary,
+    color: "#fff",
   },
-  rowStudentInfo: { alignItems: "flex-end", maxWidth: 80 },
-  priceRow: { flexDirection: "row-reverse", alignItems: "center", gap: 3 },
-  rowName: {
-    fontSize: 14,
-    fontFamily: "Alex_600",
-    color: Colors.textPrimary,
+  studentBlock: {
+    flex: 1,
+    alignItems: "flex-end",
+    gap: 3,
   },
-  rowPrice: {
-    fontSize: 12,
-    fontFamily: "Alex_600",
-    color: Colors.success,
-  },
-  rowSubject: {
-    fontSize: 13,
-    fontFamily: "Alex_600",
+  name: {
+    fontSize: 16,
+    fontFamily: "Alex_700",
     color: Colors.textPrimary,
     textAlign: "right",
   },
-  rowTimeRow: {
-    flexDirection: "row-reverse",
+  duration: {
+    fontSize: 13,
+    fontFamily: "Alex_500",
+    color: Colors.primary,
+    textAlign: "right",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.borderLight,
+    marginVertical: 10,
+  },
+  bottomRow: {
+    flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    justifyContent: "flex-end",
+    gap: 8,
   },
-  rowDate: {
-    fontSize: 11,
-    fontFamily: "Alex_400",
-    color: Colors.textTertiary,
-  },
-  rowDot: {
-    fontSize: 11,
-    color: Colors.textTertiary,
-  },
-  rowTime: {
-    fontSize: 11,
+  subject: {
+    fontSize: 14,
     fontFamily: "Alex_600",
-    color: Colors.textMuted,
+    color: Colors.textPrimary,
+    textAlign: "right",
+    flex: 1,
   },
 });

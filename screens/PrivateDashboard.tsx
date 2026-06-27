@@ -1,7 +1,7 @@
 import { RequestCard } from "@/components/PrivateDashboard/RequestCard";
 import type { PrivateSessionBooking } from "@/components/PrivateDashboard/Types";
 import { Colors } from "@/constants/colors";
-import { Inbox } from "lucide-react-native";
+import EmptyLogIcon from "@/assets/svg/EmptyLog.svg";
 import React from "react";
 import {
   ActivityIndicator,
@@ -66,7 +66,7 @@ export function PrivateDashboard({
           ))
         ) : (
           <View style={styles.emptyState}>
-            <Inbox size={44} color={Colors.borderLight} strokeWidth={1.8} />
+            <EmptyLogIcon width={120} height={130} />
             <Text style={styles.emptyText}>لا توجد طلبات حصص فردية حالياً</Text>
             <Text style={styles.emptyHint}>
               ستظهر هنا طلبات الحصص الفردية الجديدة عند وصولها

@@ -1,6 +1,11 @@
-import { BookOpen, CheckCircle, Clock, XCircle } from "lucide-react-native";
-import React from "react";
 import { Colors } from "@/constants/colors";
+import {
+  BookOpen,
+  CheckCircle2Icon,
+  Clock,
+  XCircle,
+} from "lucide-react-native";
+import React from "react";
 
 export type SessionStatus = "pending" | "approved" | "completed" | "cancelled";
 
@@ -24,10 +29,30 @@ export const STATUS_CONFIG: Record<
     icon: React.ComponentType<{ size: number; color: string }>;
   }
 > = {
-  pending: { label: "معلقة", color: Colors.warning, bg: Colors.warningBg, icon: Clock },
-  approved: { label: "مؤكدة", color: Colors.info, bg: Colors.infoBg, icon: CheckCircle },
-  completed: { label: "مكتملة", color: Colors.success, bg: Colors.successBg, icon: BookOpen },
-  cancelled: { label: "ملغاة", color: Colors.error, bg: Colors.errorBg, icon: XCircle },
+  pending: {
+    label: "معلقة",
+    color: Colors.warning,
+    bg: Colors.warningBg,
+    icon: Clock,
+  },
+  approved: {
+    label: "مؤكدة",
+    color: "#34C759",
+    bg: "#E3FED4",
+    icon: CheckCircle2Icon,
+  },
+  completed: {
+    label: "مكتملة",
+    color: Colors.success,
+    bg: Colors.successBg,
+    icon: BookOpen,
+  },
+  cancelled: {
+    label: "ملغاة",
+    color: Colors.error,
+    bg: Colors.errorBg,
+    icon: XCircle,
+  },
 };
 
 export const FILTER_TABS: { id: SessionStatus | "all"; label: string }[] = [

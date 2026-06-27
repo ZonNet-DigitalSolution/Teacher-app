@@ -1,3 +1,4 @@
+import EmptyLogIcon from "@/assets/svg/EmptyLog.svg";
 import { SessionRow } from "@/components/PrivateLog/SessionRow";
 import {
   FILTER_TABS,
@@ -5,7 +6,7 @@ import {
   SessionStatus,
 } from "@/components/PrivateLog/Types";
 import { Colors } from "@/constants/colors";
-import { BookOpen, Search, X } from "lucide-react-native";
+import { Search, X } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import {
   FlatList,
@@ -54,6 +55,7 @@ export function PrivateLog({ sessions = [] }: { sessions?: LogSession[] }) {
 
       {/* Filter chips + count on same row */}
       <View style={styles.filterRow}>
+        <Text style={styles.countText}>{filtered.length} جلسة</Text>
         <FlatList
           data={FILTER_TABS}
           horizontal
@@ -81,7 +83,6 @@ export function PrivateLog({ sessions = [] }: { sessions?: LogSession[] }) {
             </TouchableOpacity>
           )}
         />
-        <Text style={styles.countText}>{filtered.length} جلسة</Text>
       </View>
 
       {/* Sessions */}
@@ -93,7 +94,7 @@ export function PrivateLog({ sessions = [] }: { sessions?: LogSession[] }) {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <BookOpen size={44} color={Colors.textTertiary} />
+            <EmptyLogIcon width={120} height={130} />
             <Text style={styles.emptyTitle}>لا توجد جلسات</Text>
             <Text style={styles.emptyHint}>جرّب تغيير معايير البحث</Text>
           </View>
@@ -133,19 +134,25 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingRight: 16,
+    justifyContent: "space-between",
+    paddingLeft: 16,
     marginBottom: 10,
   },
   countText: {
     fontSize: 12,
     fontFamily: "Alex_600",
-    color: Colors.textTertiary,
+    backgroundColor: "#FFFCDE",
+    borderRadius: 50,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    color: "#E0B401",
     minWidth: 44,
   },
-  filterList: { flex: 1, flexGrow: 1 },
+  filterList: { marginLeft: "auto" },
   filterContent: {
     flexDirection: "row-reverse",
-    paddingHorizontal: 10,
+    marginLeft: "auto",
+    paddingHorizontal: 16,
     gap: 8,
     paddingVertical: 2,
   },
@@ -157,15 +164,15 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   filterChipActive: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
   filterChipText: {
     fontSize: 12,
-    fontFamily: "Alex_400",
-    color: Colors.textSecondary,
+    fontFamily: "Alex_600",
+    color: "#3B3B3C",
   },
-  filterChipTextActive: { fontFamily: "Alex_700", color: Colors.primary },
+  filterChipTextActive: { color: "white" },
   listContent: { paddingHorizontal: 16, gap: 10 },
   emptyState: { alignItems: "center", paddingVertical: 60, gap: 8 },
   emptyTitle: {
