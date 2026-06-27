@@ -36,7 +36,7 @@ jobs:
       - name: Build iOS Archive
         run: |
           cd ios
-          WORKSPACE=$(ls *.xcworkspace | head -1)
+          WORKSPACE=$(ls -d *.xcworkspace | head -1)
           SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | awk '/Schemes:/{found=1; next} found && NF{print $1; exit}')
           echo "Building scheme: $SCHEME"
           xcodebuild \
