@@ -28,7 +28,7 @@ jobs:
       - name: Select Xcode version
         run: |
           ls /Applications | grep Xcode || true
-          sudo xcode-select -s /Applications/Xcode_16.5.app
+          sudo xcode-select -s /Applications/Xcode_26.6.0.app
           xcodebuild -version
           swift --version
 
