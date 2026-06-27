@@ -20,9 +20,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Expo CLI
-        run: npm install -g expo-cli
-
       - name: Prebuild iOS
         run: npx expo prebuild --platform ios
 
@@ -31,18 +28,28 @@ jobs:
           cd ios
           pod install
 
-      - name: Build (Xcode)
+      - name: Get workspace and scheme
+        run: |
+          ls ios
+          xcodebuild -list -workspace ios/*.xcworkspace
+
+      - name: Build iOS Archive
         run: |
           cd ios
           xcodebuild \
             -workspace *.xcworkspace \
-            -scheme * \
+            -scheme $(xcodebuild -list -workspace *.xcworkspace | awk '/Schemes:/ {getline; print $1}') \
             -configuration Release \
             -archivePath build/app.xcarchive \
             archive
+
+      - name: Export IPA (optional)
+        run: |
+          cd ios
+          mkdir -p build
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-build
-          path: ios/build
+          path: ios/build/app.xcarchive
